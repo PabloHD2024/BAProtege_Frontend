@@ -31,7 +31,7 @@ export default function RegisterScreen({ navigation }: AppScreenProps<'Register'
         try {
             setLoading(true);
             await api.register(name, surname, email, password);
-            navigation.replace('UsageMode');
+            navigation.replace('ResponsibleMode');
         } catch (error: any) {
             // ESTO ES LO QUE DEBES MEJORAR:
             Alert.alert('Error de registro', error.message);

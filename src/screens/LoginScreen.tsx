@@ -22,7 +22,7 @@ export default function LoginScreen({ navigation }: AppScreenProps<'Login'>) {
             setLoading(true);
             await api.login(email.trim(), password);
             // Navegamos a UsageMode después de un login exitoso
-            navigation.replace('UsageMode');
+            navigation.replace('ResponsibleMode');
         } catch (error: any) {
             Alert.alert('Error de inicio de sesión', error.message);
         } finally {
@@ -73,7 +73,7 @@ export default function LoginScreen({ navigation }: AppScreenProps<'Login'>) {
                 <Button
                     label="Cancelar"
                     variant="outline"
-                    onPress={() => navigation.navigate('Welcome')}
+                    onPress={() => navigation.navigate('RoleSelection')}
                 />
             </ScreenFooter>
         </FigmaScreen>

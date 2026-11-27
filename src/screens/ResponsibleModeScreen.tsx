@@ -35,7 +35,7 @@ export default function ResponsibleModeScreen({
                 subtitle="Vinculá uno o más dispositivos para protegerlos."
                 tone="positive"
                 variant="card"
-                onPress={() => navigation.navigate('Devices')}
+                onPress={() => navigation.navigate('ConfigureAccess')}
             />
             <ActionTile
                 icon={<ListChecks color={FIGMA_COLORS.surface} size={22} />}
