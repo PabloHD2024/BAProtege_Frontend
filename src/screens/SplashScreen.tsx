@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,34 +6,44 @@ import { FIGMA_COLORS } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
+    // useRef evita que el temporizador se pierda si el componente se re-renderiza
+    const isMounted = useRef(true);
+
     useEffect(() => {
+        isMounted.current = true;
+
         const checkRoleAndNavigate = async () => {
             try {
-                // Creamos una promesa que lee el storage
-                const storagePromise = AsyncStorage.getItem('@app_role');
+                // Agregamos un timeout a la lectura de AsyncStorage para que no se cuelgue en Web
+                const role = await Promise.race([
+                    AsyncStorage.getItem('@app_role'),
+                    new Promise((resolve) => setTimeout(() => resolve(null), 1000))
+                ]);
                 
-                // Si el storage tarda más de 1.5 segundos, devolvemos null (timeout)
-                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
-                
-                const role = await Promise.race([storagePromise, timeoutPromise]);
-                
-                if (role === 'protected') {
-                    navigation.replace('ProtectedHome'); 
-                } else {
-                    navigation.replace('Onboarding', { step: 1 }); 
+                if (isMounted.current) {
+                    if (role === 'protected') {
+                        navigation.replace('ProtectedHome'); 
+                    } else {
+                        navigation.replace('Onboarding', { step: 1 }); 
+                    }
                 }
             } catch (error) {
-                console.warn("Error leyendo AsyncStorage en Splash:", error);
-                // Si hay error, siempre mandamos al Onboarding para no trabar la app
-                navigation.replace('Onboarding', { step: 1 });
+                console.warn("Error en Splash:", error);
+                if (isMounted.current) {
+                    navigation.replace('Onboarding', { step: 1 });
+                }
             }
         };
 
+        // Forzamos la ejecución a los 3 segundos
         const timer = setTimeout(() => {
             checkRoleAndNavigate();
-        }, 3000); // 3 segundos de Splash (podés dejarlo en 4 si querés)
+        }, 3000);
 
-        return () => clearTimeout(timer);
+        return () => {
+            isMounted.current = false;
+            clearTimeout(timer);
+        };
     }, [navigation]);
 
     return (
