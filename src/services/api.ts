@@ -219,9 +219,9 @@ export const api = {
 
         if (!registerRes.ok) {
             const errorData = await registerRes.json().catch(() => ({}));
-            throw new Error(
-                errorData.message || errorData.error || 'Error al registrar usuario'
-            );
+            // Asegúrate de atrapar las distintas formas en que el back envía el error
+            const message = errorData.message || errorData.error || errorData.mensaje || 'Error al registrar usuario';
+            throw new Error(message); 
         }
 
         const loginRes = await fetch(`${API_URL}/auth/login`, {

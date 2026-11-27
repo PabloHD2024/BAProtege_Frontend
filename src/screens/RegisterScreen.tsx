@@ -31,11 +31,12 @@ export default function RegisterScreen({ navigation }: AppScreenProps<'Register'
         try {
             setLoading(true);
             await api.register(name, surname, email, password);
-
-            // Si el registro es exitoso, vamos directo a UsageMode (Omitimos ConfirmAccount)
             navigation.replace('UsageMode');
         } catch (error: any) {
+            // ESTO ES LO QUE DEBES MEJORAR:
             Alert.alert('Error de registro', error.message);
+            // O si usas un estado para mostrar el error en pantalla:
+            // setErrorMsg(error.message);
         } finally {
             setLoading(false);
         }
