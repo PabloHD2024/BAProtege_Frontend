@@ -38,6 +38,7 @@ export type RootStackParamList = {
   CustomList: undefined;
   Devices: undefined;
   ScreenGallery: undefined;
+  RoleSelection: undefined;
 };
 
 export type AppScreenProps<RouteName extends keyof RootStackParamList> =

@@ -21,7 +21,7 @@ export default function OnboardingScreen({
         if (step < 5) {
             navigation.replace('Onboarding', { step: (step + 1) as OnboardingStep });
         } else {
-            navigation.replace('Welcome');
+            navigation.replace('RoleSelection');
         }
     };
 

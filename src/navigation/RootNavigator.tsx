@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { FIGMA_COLORS } from '../components';
 import type { RootStackParamList } from './types';
+import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -57,6 +58,7 @@ export default function RootNavigator() {
             >
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
                 <Stack.Screen name="Welcome" component={WelcomeScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="RegistrationSuccess" component={RegistrationSuccessScreen} />
