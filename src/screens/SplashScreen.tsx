@@ -21,7 +21,7 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
                     style={{ width: 176, height: 176, resizeMode: 'contain' }} 
                 />
                 <Image 
-                    source={require('../../assets/logo blanco lotba_Mesa de trabajo 1.png')} 
+                    source={require('../../assets/logo blanco lotba.png')} 
                     style={{ width: 176, height: 176, resizeMode: 'contain' }} 
                 />
 
