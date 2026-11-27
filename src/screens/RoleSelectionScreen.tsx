@@ -1,48 +1,45 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
-import { FIGMA_COLORS } from '../components';
-import type { AppScreenProps } from '../navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AppScreenProps } from '../navigation/types';
 
 export default function RoleSelectionScreen({ navigation }: AppScreenProps<'RoleSelection'>) {
     return (
         <SafeAreaView style={styles.root}>
             <StatusBar barStyle="dark-content" />
+            
+            {/* Le puse un View con padding para que no quede pegado a los bordes */}
             <View style={styles.container}>
                 <Text style={styles.title}>¿Cómo vas a usar la app?</Text>
                 <Text style={styles.subtitle}>
-                    Elegí tu rol para continuar. Esta configuración es importante.
+                    Elegí tu rol para continuar.
                 </Text>
 
                 <View style={styles.cardsContainer}>
                     {/* BOTÓN RESPONSABLE (AZUL) */}
-                    <TouchableOpacity
+                    <TouchableOpacity 
                         style={[styles.card, { backgroundColor: '#1976D2' }]}
                         onPress={() => navigation.navigate('Login')}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.cardIcon}>🛡️</Text>
                         <Text style={styles.cardTitle}>Soy Responsable</Text>
                         <Text style={styles.cardDescription}>
-                            Administrá la protección y gestioná los dispositivos.
+                            Administrá la protección.
                         </Text>
                     </TouchableOpacity>
 
                     {/* BOTÓN PROTEGIDO (VERDE) */}
-                    <TouchableOpacity
+                    <TouchableOpacity 
                         style={[styles.card, { backgroundColor: '#2E7D32' }]}
                         onPress={async () => {
-                            // 1. Guardamos el rol como 'protected'
                             await AsyncStorage.setItem('@app_role', 'protected');
-                            // 2. Lo mandamos a la pantalla
-                            navigation.replace('ProtectedHome');
+                            navigation.replace('ProtectedCode'); 
                         }}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.cardIcon}>📱</Text>
                         <Text style={styles.cardTitle}>Soy Protegido</Text>
                         <Text style={styles.cardDescription}>
-                            Este dispositivo está protegido. Solo el responsable puede desbloquearlo.
+                            Este dispositivo está protegido.
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -52,13 +49,50 @@ export default function RoleSelectionScreen({ navigation }: AppScreenProps<'Role
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: FIGMA_COLORS.background },
-    container: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
-    title: { fontSize: 28, fontWeight: '800', color: FIGMA_COLORS.text, textAlign: 'center', marginBottom: 12 },
-    subtitle: { fontSize: 16, color: FIGMA_COLORS.text, textAlign: 'center', marginBottom: 40, opacity: 0.7 },
-    cardsContainer: { gap: 20 },
-    card: { borderRadius: 16, padding: 24, alignItems: 'center', elevation: 5 },
-    cardIcon: { fontSize: 48, marginBottom: 12 },
-    cardTitle: { fontSize: 20, fontWeight: '700', color: '#FFFFFF', marginBottom: 8 },
-    cardDescription: { fontSize: 14, color: '#E0E0E0', textAlign: 'center' },
+    root: {
+        flex: 1,
+        backgroundColor: '#F5F7FA', // Fondo gris claro para que resalte el texto
+    },
+    container: {
+        flex: 1,
+        paddingHorizontal: 24,
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: '800',
+        color: '#1A1A1A', // Texto oscuro para que se lea
+        textAlign: 'center',
+        marginBottom: 12,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666666',
+        textAlign: 'center',
+        marginBottom: 40,
+    },
+    cardsContainer: {
+        gap: 20,
+    },
+    card: {
+        borderRadius: 16,
+        padding: 24,
+        alignItems: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    cardTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 8,
+    },
+    cardDescription: {
+        fontSize: 14,
+        color: '#E0E0E0',
+        textAlign: 'center',
+    },
 });
