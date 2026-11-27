@@ -3,12 +3,7 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import Button from '../components/Button';
 import CheckOption from '../components/CheckOption';
 import TextField from '../components/TextField';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    FIGMA_COLORS,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, FIGMA_COLORS, } from '../components';
 import { api } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
 

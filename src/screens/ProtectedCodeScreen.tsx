@@ -3,12 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BellRing } from 'lucide-react-native';
 import Button from '../components/Button';
 import PinEntry from '../components/PinEntry';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    FIGMA_COLORS,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, FIGMA_COLORS, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 import { getOrCreateDeviceUuid} from "../services/deviceIdentity";
 

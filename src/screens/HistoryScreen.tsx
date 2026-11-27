@@ -1,13 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Clock3, Globe2, ShieldCheck } from 'lucide-react-native';
-import {
-  FigmaScreen,
-  PageTitle,
-  SurfaceCard,
-  FIGMA_COLORS,
-  figmaStyles,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components/FigmaScreen';
 import { RECENT_HISTORY } from '../data/historyEntries';
 import type { AppScreenProps } from '../navigation/types';
 

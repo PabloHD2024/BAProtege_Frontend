@@ -19,7 +19,7 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
 
     // 2. Cuando llega a 4 segundos (o los que quieras), ejecutamos la navegación
     useEffect(() => {
-        if (segundos >= 4) {
+        if (segundos >= 3) {
             const navigateApp = async () => {
                 try {
                     const role = await AsyncStorage.getItem('@app_role');
@@ -43,11 +43,11 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
             <View style={styles.body}>
                 <Image 
                     source={require('../../assets/LogoBAProtege.png')} 
-                    style={{ width: 176, height: 176, resizeMode: 'contain' }} 
+                    style={{ width: 220, height: 220, resizeMode: 'contain' }} 
                 />
                 <Image 
                     source={require('../../assets/logo blanco lotba.png')} 
-                    style={{ width: 176, height: 176, resizeMode: 'contain' }} 
+                    style={{ width: 200, height: 200, resizeMode: 'contain' }} 
                 />
             </View>
         </SafeAreaView>

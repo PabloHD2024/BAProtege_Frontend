@@ -1,14 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, Mail } from 'lucide-react-native';
-import {
-  FigmaScreen,
-  FIGMA_COLORS,
-  PageTitle,
-  PrimaryAction,
-  ScreenFooter,
-  SurfaceCard,
-} from '../components';
+import { FigmaScreen, FIGMA_COLORS, PageTitle, PrimaryAction, ScreenFooter, SurfaceCard, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function RegistrationSuccessScreen({

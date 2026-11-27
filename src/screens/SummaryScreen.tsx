@@ -1,13 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 const points = [

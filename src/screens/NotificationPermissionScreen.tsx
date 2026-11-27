@@ -1,15 +1,7 @@
 import React from 'react';
 import { Bell, CheckCircle2 } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import {
-  FigmaScreen,
-  FIGMA_COLORS,
-  PageTitle,
-  PrimaryAction,
-  ScreenFooter,
-  SurfaceCard,
-  figmaStyles,
-} from '../components/FigmaScreen';
+import { FigmaScreen, FIGMA_COLORS, PageTitle, PrimaryAction, ScreenFooter, SurfaceCard, figmaStyles, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function NotificationPermissionScreen({

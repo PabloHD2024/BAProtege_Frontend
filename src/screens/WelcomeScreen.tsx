@@ -12,7 +12,7 @@ export default function WelcomeScreen({ navigation }: AppScreenProps<'Welcome'>)
         <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar barStyle="dark-content" />
             <View style={styles.body}>
-                <LotbaBrandMark size={176} />
+                <LotbaBrandMark size={220} />
                 <Text style={styles.title}>Protección Digital{'\n'}Para Tu Familia</Text>
                 <View style={styles.actions}>
                     <Button

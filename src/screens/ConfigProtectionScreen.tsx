@@ -1,21 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import {
-    Accessibility,
-    BatteryCharging,
-    Bell,
-    Pin,
-    Power,
-    ShieldCheck,
-} from 'lucide-react-native';
+import { Accessibility, BatteryCharging, Bell, Pin, Power, ShieldCheck, } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 const permissions = [

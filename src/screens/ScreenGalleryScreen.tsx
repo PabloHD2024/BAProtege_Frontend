@@ -1,12 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import {
-  FigmaScreen,
-  FIGMA_COLORS,
-  PageTitle,
-  SurfaceCard,
-} from '../components';
+import { FigmaScreen, FIGMA_COLORS, PageTitle, SurfaceCard, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function ScreenGalleryScreen({

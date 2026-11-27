@@ -23,21 +23,6 @@ export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklis
     fetchSites();
   }, []);
 
-  // const fetchSites = async () => {
-  //   try {
-  //     setLoading(true);
-  //     console.log('[Blacklist] Fetching sites...');
-  //     const data = await api.getCustomRules();
-  //     console.log('[Blacklist] Sites fetched:', data);
-  //     setSites(data);
-  //   } catch (error: any) {
-  //     console.error('[Blacklist] Error fetching:', error);
-  //     Alert.alert('Error', error.message || 'No se pudo cargar la lista negra');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchSites = async () => {
     try {
       setLoading(true);
@@ -55,38 +40,19 @@ export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklis
     }
   };
 
-  // const addSite = async () => {
-  //   const newSite = site.trim();
-  //   if (!newSite) return;
-  //
-  //   try {
-  //     setIsSubmitting(true);
-  //     console.log('[Blacklist] Adding site:', newSite);
-  //     const newRule = await api.addCustomRule(newSite);
-  //     console.log('[Blacklist] Rule created:', newRule);
-  //     setSites(current => [newRule, ...current]);
-  //     setSite('');
-  //   } catch (error: any) {
-  //     console.error('[Blacklist] Error adding:', error);
-  //     Alert.alert('Error', error.message || 'No se pudo agregar el sitio');
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   const addSite = async () => {
     const newSite = site.trim().toLowerCase();
     if (!newSite) return;
 
     // Validación en cliente: ¿ya está en la lista?
     const alreadyExists = sites.some(
-        s => s.value.toLowerCase() === newSite
+      s => s.value.toLowerCase() === newSite
     );
 
     if (alreadyExists) {
       Alert.alert(
-          'Sitio ya bloqueado',
-          `${newSite} ya está en tu lista de sitios bloqueados.`
+        'Sitio ya bloqueado',
+        `${newSite} ya está en tu lista de sitios bloqueados.`
       );
       return;
     }
@@ -102,7 +68,7 @@ export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklis
       setSites(current => {
         if (current.some(s => s.id === newRule.id)) {
           return current.map(s =>
-              s.id === newRule.id ? newRule : s
+            s.id === newRule.id ? newRule : s
           );
         }
         return [newRule, ...current];
@@ -131,64 +97,64 @@ export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklis
   console.log('[Blacklist] RENDER - sites:', sites.length, 'loading:', loading);
 
   return (
-      <FigmaScreen onBack={() => navigation.goBack()}>
-        <PageTitle
-            title="Lista negra"
-            subtitle="Agregá sitios que quieras bloquear manualmente."
-        />
-        <View style={styles.inputRow}>
-          <View style={styles.inputWrap}>
-            <TextField
-                placeholder="sitio.com"
-                value={site}
-                onChangeText={setSite}
-            />
-          </View>
-          <TouchableOpacity
-              accessibilityLabel="Agregar sitio"
-              accessibilityRole="button"
-              disabled={!canAdd || isSubmitting}
-              onPress={addSite}
-              style={[styles.addButton, (!canAdd || isSubmitting) && styles.disabled]}
-          >
-            {isSubmitting ? (
-                <ActivityIndicator color={FIGMA_COLORS.surface} size="small" />
-            ) : (
-                <Plus color={FIGMA_COLORS.surface} size={22} />
-            )}
-          </TouchableOpacity>
+    <FigmaScreen onBack={() => navigation.goBack()}>
+      <PageTitle
+        title="Lista negra"
+        subtitle="Agregá sitios que quieras bloquear manualmente."
+      />
+      <View style={styles.inputRow}>
+        <View style={styles.inputWrap}>
+          <TextField
+            placeholder="sitio.com"
+            value={site}
+            onChangeText={setSite}
+          />
         </View>
-
-        <Text style={styles.sectionTitle}>Sitios bloqueados ({sites.length})</Text>
-
-        <SurfaceCard style={styles.list}>
-          {loading ? (
-              <ActivityIndicator color={FIGMA_COLORS.primary} style={{ marginVertical: 30 }} />
-          ) : sites.length === 0 ? (
-              <Text style={styles.empty}>Todavía no agregaste sitios.</Text>
+        <TouchableOpacity
+          accessibilityLabel="Agregar sitio"
+          accessibilityRole="button"
+          disabled={!canAdd || isSubmitting}
+          onPress={addSite}
+          style={[styles.addButton, (!canAdd || isSubmitting) && styles.disabled]}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color={FIGMA_COLORS.surface} size="small" />
           ) : (
-              sites.map((item, index) => (
-                  <View
-                      key={item.id}
-                      style={[styles.siteRow, index > 0 && styles.divided]}
-                  >
-                    <View style={styles.siteIcon}>
-                      <Globe2 color={FIGMA_COLORS.primary} size={18} />
-                    </View>
-                    <Text style={styles.siteName}>{item.value}</Text>
-                    <TouchableOpacity
-                        accessibilityLabel={`Quitar ${item.value}`}
-                        accessibilityRole="button"
-                        onPress={() => removeSite(item.id, item.value)}
-                        style={styles.removeButton}
-                    >
-                      <Trash2 color={FIGMA_COLORS.muted} size={18} />
-                    </TouchableOpacity>
-                  </View>
-              ))
+            <Plus color={FIGMA_COLORS.surface} size={22} />
           )}
-        </SurfaceCard>
-      </FigmaScreen>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.sectionTitle}>Sitios bloqueados ({sites.length})</Text>
+
+      <SurfaceCard style={styles.list}>
+        {loading ? (
+          <ActivityIndicator color={FIGMA_COLORS.primary} style={{ marginVertical: 30 }} />
+        ) : sites.length === 0 ? (
+          <Text style={styles.empty}>Todavía no agregaste sitios.</Text>
+        ) : (
+          sites.map((item, index) => (
+            <View
+              key={item.id}
+              style={[styles.siteRow, index > 0 && styles.divided]}
+            >
+              <View style={styles.siteIcon}>
+                <Globe2 color={FIGMA_COLORS.primary} size={18} />
+              </View>
+              <Text style={styles.siteName}>{item.value}</Text>
+              <TouchableOpacity
+                accessibilityLabel={`Quitar ${item.value}`}
+                accessibilityRole="button"
+                onPress={() => removeSite(item.id, item.value)}
+                style={styles.removeButton}
+              >
+                <Trash2 color={FIGMA_COLORS.muted} size={18} />
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </SurfaceCard>
+    </FigmaScreen>
   );
 }
 

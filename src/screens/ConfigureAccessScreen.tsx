@@ -2,18 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { KeyRound } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function ConfigureAccessScreen({
-                                                  navigation,
-                                              }: AppScreenProps<'ConfigureAccess'>) {
+    navigation,
+}: AppScreenProps<'ConfigureAccess'>) {
     return (
         <FigmaScreen onBack={() => navigation.goBack()}>
             <PageTitle

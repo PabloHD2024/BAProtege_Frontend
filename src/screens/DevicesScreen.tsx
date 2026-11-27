@@ -2,14 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { Laptop, Smartphone, Tablet } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-    figmaStyles,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components';
 import { api, type Device } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
 

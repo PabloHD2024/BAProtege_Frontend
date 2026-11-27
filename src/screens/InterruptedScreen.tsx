@@ -2,11 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2 } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    ScreenFooter,
-    FIGMA_COLORS,
-} from '../components';
+import { FigmaScreen, ScreenFooter, FIGMA_COLORS, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function InterruptedScreen({

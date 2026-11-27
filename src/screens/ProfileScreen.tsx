@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import {
-  Bell, ChevronRight, CircleUserRound, History, LogOut, Shield,
-} from 'lucide-react-native';
-import {
-  FigmaScreen, FIGMA_COLORS, PageTitle, SurfaceCard,
-} from '../components/FigmaScreen';
+import { Bell, ChevronRight, CircleUserRound, History, LogOut, Shield, } from 'lucide-react-native';
+import { FigmaScreen, FIGMA_COLORS, PageTitle, SurfaceCard, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 import { tokenStorage } from '../services/tokenStorage';
 

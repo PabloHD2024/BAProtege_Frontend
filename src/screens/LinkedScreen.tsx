@@ -2,13 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2 } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function LinkedScreen({ navigation }: AppScreenProps<'Linked'>) {

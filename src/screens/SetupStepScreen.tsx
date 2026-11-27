@@ -1,15 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { CheckCircle2 } from 'lucide-react-native';
-import {
-  FigmaScreen,
-  FIGMA_COLORS,
-  PageTitle,
-  PrimaryAction,
-  ScreenFooter,
-  SurfaceCard,
-  figmaStyles,
-} from '../components/FigmaScreen';
+import { FigmaScreen, FIGMA_COLORS, PageTitle, PrimaryAction, ScreenFooter, SurfaceCard, figmaStyles, } from '../components/FigmaScreen';
 
 export type SetupStepScreenProps = {
   onBack: () => void;

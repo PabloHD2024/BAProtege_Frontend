@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Button from '../components/Button';
 import SettingRow from '../components/SettingRow';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {

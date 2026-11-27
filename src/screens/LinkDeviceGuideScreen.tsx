@@ -2,14 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Bluetooth, Check, Smartphone } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-    figmaStyles,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components';
 
 const steps = [
     'En el dispositivo que querés proteger, instalá BA Protege+.',
