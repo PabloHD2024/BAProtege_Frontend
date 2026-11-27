@@ -88,8 +88,8 @@ export default function RootNavigator() {
                 <Stack.Screen name="BackgroundWork" component={BackgroundWorkScreen} />
                 <Stack.Screen name="AccessCodeSetup" component={AccessCodeSetupScreen} />
                 <Stack.Screen name="AccessCodeConfirmation" component={AccessCodeConfirmationScreen} />
-                <Stack.Screen name="ProtectedCodeScreen" component={ProtectedCodeScreen} />
-                <Stack.Screen name="ProtectedHomeScreen" component={ProtectedHomeScreen} />
+                <Stack.Screen name="ProtectedCode" component={ProtectedCodeScreen} />
+                <Stack.Screen name="ProtectedHome" component={ProtectedHomeScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
                 <Stack.Screen name="CustomList" component={CustomListScreen} />
                 <Stack.Screen name="Devices" component={DevicesScreen} />
