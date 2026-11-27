@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { notify } from '../utils/notify';
 
 export default function ProtectedScreen({ navigation }: any) {
     const [pin, setPin] = useState('');
@@ -10,9 +11,9 @@ export default function ProtectedScreen({ navigation }: any) {
         if (pin === '123456') { 
             // Si el PIN es correcto (simulado), se desbloquea y vuelve al sistema
             // O le permite al tutor entrar a configurar algo temporalmente
-            Alert.alert("Desbloqueado", "El dispositivo ha sido desbloqueado por el responsable.");
+            notify("Desbloqueado", "El dispositivo ha sido desbloqueado por el responsable.");
         } else {
-            Alert.alert("Error", "PIN incorrecto. Pedile el código al responsable.");
+            notify("Error", "PIN incorrecto. Pedile el código al responsable.");
         }
     };
 

@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Laptop, Smartphone, Tablet } from 'lucide-react-native';
 import Button from '../components/Button';
 import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components';
 import { api, type Device } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
+import { notify } from '../utils/notify';
 
 const iconFor = (osModel?: string | null) => {
     const m = (osModel ?? '').toLowerCase();
@@ -48,7 +49,7 @@ export default function DevicesScreen({ navigation }: AppScreenProps<'Devices'>)
             const data = await api.getDevices();
             setDevices(data);
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'No se pudieron cargar los dispositivos');
+            notify('Error', error.message || 'No se pudieron cargar los dispositivos');
         } finally {
             setLoading(false);
         }

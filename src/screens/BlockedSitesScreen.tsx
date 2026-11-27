@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ban, ChevronRight, Globe2, ListFilter, Plus } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ban, ChevronRight, Globe2, ListFilter, Plus, RefreshCw } from 'lucide-react-native';
 import {
   FigmaScreen,
   FIGMA_COLORS,
@@ -8,11 +8,41 @@ import {
   SurfaceCard,
   figmaStyles,
 } from '../components/FigmaScreen';
+import {
+  getCachedSystemRules,
+  syncSystemRules,
+  type SystemRulesCache,
+} from '../services/rulesSync';
 import type { AppScreenProps } from '../navigation/types';
+
+const PREVIEW_COUNT = 5;
 
 export default function BlockedSitesScreen({
   navigation,
 }: AppScreenProps<'BlockedSites'>) {
+  const [rules, setRules] = useState<SystemRulesCache | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Consulta GET /sync/system enviando versión + checksum guardados
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRules(await syncSystemRules());
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo actualizar la lista general.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Muestra primero la última lista guardada y después verifica contra el backend
+    getCachedSystemRules().then(cached => cached && setRules(cached));
+    refresh();
+  }, [refresh]);
+
   return (
     <FigmaScreen onBack={() => navigation.goBack()}>
       <PageTitle
@@ -24,13 +54,67 @@ export default function BlockedSitesScreen({
           <Ban color={FIGMA_COLORS.primary} size={24} />
         </View>
         <View style={styles.summaryText}>
-          <Text style={styles.count}>Apuestas</Text>
-          <Text style={styles.summaryCaption}>Categoría de protección activa</Text>
+          <Text style={styles.count}>
+            {rules ? `Lista general · ${rules.total} reglas` : 'Lista general'}
+          </Text>
+          <Text style={styles.summaryCaption}>
+            {rules
+              ? `${rules.domain.length} dominios · ${rules.keyword.length} palabras clave`
+              : loading
+                ? 'Consultando reglas...'
+                : 'Sin datos todavía'}
+          </Text>
         </View>
-        <View style={styles.status}>
-          <Text style={styles.statusText}>ACTIVO</Text>
-        </View>
+        {rules ? (
+          <View style={styles.status}>
+            <Text style={styles.statusText}>v{rules.version}</Text>
+          </View>
+        ) : null}
       </SurfaceCard>
+
+      {rules ? (
+        <Text style={styles.meta}>
+          Actualizada: {new Date(rules.updatedAt).toLocaleString('es-AR')} · checksum{' '}
+          {rules.checksum.slice(0, 8)}
+        </Text>
+      ) : null}
+      {error ? (
+        <Text style={styles.error}>
+          {error}
+          {rules ? ' Se muestra la última lista guardada.' : ''}
+        </Text>
+      ) : null}
+
+      <TouchableOpacity
+        accessibilityRole="button"
+        disabled={loading}
+        onPress={refresh}
+        style={[styles.addButton, styles.refresh, loading && styles.disabled]}
+      >
+        {loading ? (
+          <ActivityIndicator color={FIGMA_COLORS.primary} size="small" />
+        ) : (
+          <RefreshCw color={FIGMA_COLORS.primary} size={19} />
+        )}
+        <Text style={styles.addText}>Actualizar lista general</Text>
+      </TouchableOpacity>
+
+      {rules && rules.domain.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>Ejemplos de la lista</Text>
+          <SurfaceCard style={styles.preview}>
+            {rules.domain.slice(0, PREVIEW_COUNT).map((domain, index) => (
+              <View key={domain} style={[styles.categoryRow, index > 0 && styles.divided]}>
+                <View style={styles.categoryIcon}>
+                  <Globe2 color={FIGMA_COLORS.primary} size={17} />
+                </View>
+                <Text style={figmaStyles.rowTitle}>{domain}</Text>
+              </View>
+            ))}
+          </SurfaceCard>
+        </>
+      ) : null}
+
       <TouchableOpacity
         accessibilityRole="button"
         onPress={() => navigation.navigate('Blacklist')}
@@ -41,23 +125,10 @@ export default function BlockedSitesScreen({
         </View>
         <View style={styles.linkText}>
           <Text style={figmaStyles.rowTitle}>Lista negra</Text>
-          <Text style={styles.summaryCaption}>Sitios agregados manualmente</Text>
+          <Text style={styles.summaryCaption}>Sitios y palabras agregados manualmente</Text>
         </View>
         <ChevronRight color={FIGMA_COLORS.muted} size={19} />
       </TouchableOpacity>
-      <Text style={styles.sectionTitle}>Categorías protegidas</Text>
-      <SurfaceCard>
-        <View style={styles.categoryRow}>
-          <View style={styles.categoryIcon}>
-            <Globe2 color={FIGMA_COLORS.primary} size={19} />
-          </View>
-          <View style={styles.linkText}>
-            <Text style={figmaStyles.rowTitle}>Sitios de apuestas</Text>
-            <Text style={styles.summaryCaption}>Bloqueo de sitios y aplicaciones</Text>
-          </View>
-          <Text style={styles.activeText}>Activado</Text>
-        </View>
-      </SurfaceCard>
       <TouchableOpacity
         accessibilityRole="button"
         onPress={() => navigation.navigate('Blacklist')}
@@ -71,6 +142,31 @@ export default function BlockedSitesScreen({
 }
 
 const styles = StyleSheet.create({
+  meta: {
+    color: FIGMA_COLORS.muted,
+    fontSize: 11,
+    marginBottom: 12,
+  },
+  error: {
+    color: FIGMA_COLORS.danger,
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  refresh: {
+    marginBottom: 20,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  preview: {
+    marginBottom: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+  },
+  divided: {
+    borderTopColor: FIGMA_COLORS.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   summary: {
     alignItems: 'center',
     flexDirection: 'row',

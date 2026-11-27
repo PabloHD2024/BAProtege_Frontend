@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import Button from '../components/Button';
 import CheckOption from '../components/CheckOption';
 import TextField from '../components/TextField';
 import { FigmaScreen, PageTitle, ScreenFooter, FIGMA_COLORS, } from '../components';
 import { api } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
+import { notify } from '../utils/notify';
 
 export default function LoginScreen({ navigation }: AppScreenProps<'Login'>) {
     const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ export default function LoginScreen({ navigation }: AppScreenProps<'Login'>) {
             // Navegamos a UsageMode después de un login exitoso
             navigation.replace('ResponsibleMode');
         } catch (error: any) {
-            Alert.alert('Error de inicio de sesión', error.message);
+            notify('Error de inicio de sesión', error.message);
         } finally {
             setLoading(false);
         }

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, StatusBar, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { pairingApi } from '../services/api'; // Asegurate de que la ruta sea correcta
 import type { AppScreenProps } from '../navigation/types';
+import { notify } from '../utils/notify';
 
 export default function ConfigureAccessScreen({ navigation }: AppScreenProps<'ConfigureAccess'>) {
     const [pin, setPin] = useState('');
@@ -15,7 +16,7 @@ export default function ConfigureAccessScreen({ navigation }: AppScreenProps<'Co
             const response = await pairingApi.generatePairingCode();
             setPin(response.code); // Guardamos el PIN devuelto (ej. "492015")
         } catch (error: any) {
-            Alert.alert("Error", error.message || "No se pudo generar el código");
+            notify("Error", error.message || "No se pudo generar el código");
         } finally {
             setLoading(false);
         }

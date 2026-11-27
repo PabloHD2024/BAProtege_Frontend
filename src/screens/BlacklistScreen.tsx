@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
-import { Globe2, Plus, Trash2 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Check, Globe2, Pencil, Plus, Tag, Trash2, X } from 'lucide-react-native';
 import TextField from '../components/TextField';
 import {
   FigmaScreen,
@@ -9,143 +9,214 @@ import {
   FIGMA_COLORS,
 } from '../components';
 import { api, type CustomRule } from '../services/api';
+import { normalizeRuleValue, validateRuleValue, type RuleType } from '../utils/rules';
+import { notify } from '../utils/notify';
 import type { AppScreenProps } from '../navigation/types';
 
+const TYPE_LABEL: Record<RuleType, string> = {
+  domain: 'Dominio',
+  keyword: 'Palabra clave',
+};
+
 export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklist'>) {
-  const [site, setSite] = useState('');
-  const [sites, setSites] = useState<CustomRule[]>([]);
+  const [ruleType, setRuleType] = useState<RuleType>('domain');
+  const [text, setText] = useState('');
+  const [rules, setRules] = useState<CustomRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const canAdd = site.trim().length > 0;
+  const canSubmit = text.trim().length > 0 && !isSubmitting;
 
-  useEffect(() => {
-    fetchSites();
-  }, []);
-
-  const fetchSites = async () => {
+  // Siempre vuelve a leer del backend, así la lista refleja el estado real tras cada operación
+  const loadRules = useCallback(async (showSpinner: boolean) => {
     try {
-      setLoading(true);
-      console.log('[Blacklist] Fetching sites...'); // ← ya lo tenés
-      const data = await api.getCustomRules();
-      console.log('[Blacklist] Sites fetched:', data); // ← ya lo tenés
-      setSites(data);
-      console.log('[Blacklist] setSites called with:', data.length, 'items');
+      if (showSpinner) setLoading(true);
+      setRules(await api.getCustomRules());
     } catch (error: any) {
-      console.error('[Blacklist] Error fetching:', error);
-      Alert.alert('Error', error.message || 'No se pudo cargar la lista negra');
+      notify('Error', error.message || 'No se pudo cargar la lista negra');
     } finally {
       setLoading(false);
-      console.log('[Blacklist] Loading complete');
     }
+  }, []);
+
+  useEffect(() => {
+    loadRules(true);
+  }, [loadRules]);
+
+  const resetForm = () => {
+    setText('');
+    setEditingId(null);
+    setFormError(null);
   };
 
-  const addSite = async () => {
-    const newSite = site.trim().toLowerCase();
-    if (!newSite) return;
+  const startEdit = (rule: CustomRule) => {
+    setEditingId(rule.id);
+    setRuleType(rule.rule_type);
+    setText(rule.value);
+    setFormError(null);
+  };
 
-    // Validación en cliente: ¿ya está en la lista?
-    const alreadyExists = sites.some(
-      s => s.value.toLowerCase() === newSite
+  const submit = async () => {
+    const normalized = normalizeRuleValue(ruleType, text);
+
+    const invalid = validateRuleValue(ruleType, normalized);
+    if (invalid) {
+      setFormError(invalid);
+      return;
+    }
+
+    // Duplicados: se compara el valor normalizado, igual que lo hace el backend
+    const duplicated = rules.some(
+      r =>
+        r.id !== editingId &&
+        r.rule_type === ruleType &&
+        normalizeRuleValue(r.rule_type, r.value) === normalized
     );
-
-    if (alreadyExists) {
-      Alert.alert(
-        'Sitio ya bloqueado',
-        `${newSite} ya está en tu lista de sitios bloqueados.`
-      );
+    if (duplicated) {
+      setFormError(`"${normalized}" ya está en tu lista.`);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      console.log('[Blacklist] Adding site:', newSite);
-      const newRule = await api.addCustomRule(newSite);
-      console.log('[Blacklist] Rule created:', newRule);
-
-      // Por si el backend igual devuelve un duplicado (por race conditions),
-      // evitamos agregarlo dos veces en el estado local
-      setSites(current => {
-        if (current.some(s => s.id === newRule.id)) {
-          return current.map(s =>
-            s.id === newRule.id ? newRule : s
-          );
-        }
-        return [newRule, ...current];
-      });
-
-      setSite('');
+      setFormError(null);
+      if (editingId) {
+        await api.updateCustomRule(editingId, normalized, ruleType);
+      } else {
+        await api.addCustomRule(normalized, ruleType);
+      }
+      resetForm();
+      await loadRules(false);
     } catch (error: any) {
-      console.error('[Blacklist] Error adding:', error);
-      Alert.alert('Error', error.message || 'No se pudo agregar el sitio');
+      // Incluye el caso de regla duplicada que detecta el backend
+      setFormError(error.message || 'No se pudo guardar la regla.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
-
-  const removeSite = async (id: string, value: string) => {
+  const removeRule = async (rule: CustomRule) => {
     try {
-      await api.deleteCustomRule(id);
-      setSites(current => current.filter(s => s.id !== id));
+      await api.deleteCustomRule(rule.id);
+      if (editingId === rule.id) resetForm();
+      await loadRules(false);
     } catch (error: any) {
-      Alert.alert('Error', `No se pudo quitar ${value}`);
+      notify('Error', error.message || `No se pudo quitar ${rule.value}`);
     }
   };
-
-  console.log('[Blacklist] RENDER - sites:', sites.length, 'loading:', loading);
 
   return (
     <FigmaScreen onBack={() => navigation.goBack()}>
       <PageTitle
         title="Lista negra"
-        subtitle="Agregá sitios que quieras bloquear manualmente."
+        subtitle="Agregá sitios o palabras clave que quieras bloquear manualmente."
       />
+
+      <View style={styles.typeRow}>
+        {(Object.keys(TYPE_LABEL) as RuleType[]).map(type => (
+          <TouchableOpacity
+            key={type}
+            accessibilityRole="button"
+            disabled={editingId !== null}
+            onPress={() => {
+              setRuleType(type);
+              setFormError(null);
+            }}
+            style={[
+              styles.typeChip,
+              ruleType === type && styles.typeChipActive,
+              editingId !== null && ruleType !== type && styles.disabled,
+            ]}
+          >
+            <Text style={[styles.typeText, ruleType === type && styles.typeTextActive]}>
+              {TYPE_LABEL[type]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={styles.inputRow}>
         <View style={styles.inputWrap}>
           <TextField
-            placeholder="sitio.com"
-            value={site}
-            onChangeText={setSite}
+            placeholder={ruleType === 'domain' ? 'sitio.com' : 'palabra'}
+            value={text}
+            onChangeText={t => {
+              setText(t);
+              if (formError) setFormError(null);
+            }}
+            autoCapitalize="none"
           />
         </View>
+        {editingId ? (
+          <TouchableOpacity
+            accessibilityLabel="Cancelar edición"
+            accessibilityRole="button"
+            onPress={resetForm}
+            style={[styles.iconButton, styles.cancelButton]}
+          >
+            <X color={FIGMA_COLORS.muted} size={22} />
+          </TouchableOpacity>
+        ) : null}
         <TouchableOpacity
-          accessibilityLabel="Agregar sitio"
+          accessibilityLabel={editingId ? 'Guardar cambios' : 'Agregar regla'}
           accessibilityRole="button"
-          disabled={!canAdd || isSubmitting}
-          onPress={addSite}
-          style={[styles.addButton, (!canAdd || isSubmitting) && styles.disabled]}
+          disabled={!canSubmit}
+          onPress={submit}
+          style={[styles.iconButton, styles.addButton, !canSubmit && styles.disabled]}
         >
           {isSubmitting ? (
             <ActivityIndicator color={FIGMA_COLORS.surface} size="small" />
+          ) : editingId ? (
+            <Check color={FIGMA_COLORS.surface} size={22} />
           ) : (
             <Plus color={FIGMA_COLORS.surface} size={22} />
           )}
         </TouchableOpacity>
       </View>
+      {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
-      <Text style={styles.sectionTitle}>Sitios bloqueados ({sites.length})</Text>
+      <Text style={styles.sectionTitle}>Reglas activas ({rules.length})</Text>
 
       <SurfaceCard style={styles.list}>
         {loading ? (
           <ActivityIndicator color={FIGMA_COLORS.primary} style={{ marginVertical: 30 }} />
-        ) : sites.length === 0 ? (
-          <Text style={styles.empty}>Todavía no agregaste sitios.</Text>
+        ) : rules.length === 0 ? (
+          <Text style={styles.empty}>Todavía no agregaste reglas.</Text>
         ) : (
-          sites.map((item, index) => (
+          rules.map((item, index) => (
             <View
               key={item.id}
-              style={[styles.siteRow, index > 0 && styles.divided]}
+              style={[
+                styles.siteRow,
+                index > 0 && styles.divided,
+                editingId === item.id && styles.rowEditing,
+              ]}
             >
               <View style={styles.siteIcon}>
-                <Globe2 color={FIGMA_COLORS.primary} size={18} />
+                {item.rule_type === 'keyword' ? (
+                  <Tag color={FIGMA_COLORS.primary} size={18} />
+                ) : (
+                  <Globe2 color={FIGMA_COLORS.primary} size={18} />
+                )}
               </View>
-              <Text style={styles.siteName}>{item.value}</Text>
+              <View style={styles.siteInfo}>
+                <Text style={styles.siteName}>{item.value}</Text>
+                <Text style={styles.siteType}>{TYPE_LABEL[item.rule_type] ?? item.rule_type}</Text>
+              </View>
+              <TouchableOpacity
+                accessibilityLabel={`Editar ${item.value}`}
+                accessibilityRole="button"
+                onPress={() => startEdit(item)}
+                style={styles.removeButton}
+              >
+                <Pencil color={FIGMA_COLORS.muted} size={18} />
+              </TouchableOpacity>
               <TouchableOpacity
                 accessibilityLabel={`Quitar ${item.value}`}
                 accessibilityRole="button"
-                onPress={() => removeSite(item.id, item.value)}
+                onPress={() => removeRule(item)}
                 style={styles.removeButton}
               >
                 <Trash2 color={FIGMA_COLORS.muted} size={18} />
@@ -159,6 +230,59 @@ export default function BlacklistScreen({ navigation }: AppScreenProps<'Blacklis
 }
 
 const styles = StyleSheet.create({
+  typeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  typeChip: {
+    backgroundColor: FIGMA_COLORS.surface,
+    borderColor: FIGMA_COLORS.border,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  typeChipActive: {
+    backgroundColor: FIGMA_COLORS.softPurple,
+    borderColor: FIGMA_COLORS.primary,
+  },
+  typeText: {
+    color: FIGMA_COLORS.muted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  typeTextActive: {
+    color: FIGMA_COLORS.primary,
+  },
+  iconButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    height: 50,
+    justifyContent: 'center',
+    marginLeft: 10,
+    width: 50,
+  },
+  cancelButton: {
+    backgroundColor: FIGMA_COLORS.softPurple,
+  },
+  error: {
+    color: FIGMA_COLORS.danger,
+    fontSize: 12,
+    marginBottom: 14,
+    marginTop: -14,
+  },
+  siteInfo: {
+    flex: 1,
+  },
+  siteType: {
+    color: FIGMA_COLORS.muted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  rowEditing: {
+    backgroundColor: FIGMA_COLORS.softPurple,
+  },
   inputRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
@@ -168,13 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addButton: {
-    alignItems: 'center',
     backgroundColor: FIGMA_COLORS.primary,
-    borderRadius: 12,
-    height: 50,
-    justifyContent: 'center',
-    marginLeft: 10,
-    width: 50,
   },
   disabled: {
     opacity: 0.45,
@@ -209,7 +327,6 @@ const styles = StyleSheet.create({
   },
   siteName: {
     color: FIGMA_COLORS.text,
-    flex: 1,
     fontSize: 14,
   },
   removeButton: {

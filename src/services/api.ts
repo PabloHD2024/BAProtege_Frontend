@@ -1,6 +1,7 @@
 import { tokenStorage } from './tokenStorage';
 import { deviceSession } from './deviceSession';
 import { getOrCreateDeviceUuid } from './deviceIdentity';
+import type { RuleType } from '../utils/rules';
 
 // Asegurate de tener EXPO_PUBLIC_API_URL en tu archivo .env
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://10.10.0.181:3000').replace(/\/$/, '');
@@ -9,7 +10,7 @@ const API_KEY = process.env.EXPO_PUBLIC_API_KEY || '';
 export type CustomRule = {
     id: string;
     value: string;
-    rule_type: string;
+    rule_type: RuleType;
     created_at?: string;
 };
 
@@ -27,13 +28,47 @@ export type Device = {
     creation_time?: string;
 };
 
+export type SyncStatus = 'UP_TO_DATE' | 'RESET';
+
+/** Respuesta de GET /sync/system (versión + checksum para saber si hay que actualizar). */
+export type SystemSyncResponse = {
+    status: SyncStatus;
+    current_version: number;
+    checksum: string;
+    data?: {
+        total: number;
+        domain: string[];
+        keyword: string[];
+        regex: string[];
+        syncedAt: string;
+    };
+};
+
+/** Contenido de `data` en GET /sync/custom/device (timestamp + checksum). */
+export type DeviceSyncResponse = {
+    status: SyncStatus;
+    current_timestamp: number;
+    checksum: string;
+    data?: {
+        total: number;
+        domain: string[];
+        keyword: string[];
+        syncedAt: string;
+    };
+};
+
+export type DeviceSyncResult =
+    | { kind: 'ok'; response: DeviceSyncResponse }
+    | { kind: 'state'; state: 'pending' | 'unlinked' }
+    | { kind: 'offline' };
+
 /** Resultado de consultar el estado del dispositivo protegido contra el backend. */
 export type DeviceLinkState = 'linked' | 'pending' | 'unlinked' | 'offline';
 
 type RawCustomRule = {
     id: string;
     value: string;
-    rule_type: string;
+    rule_type: RuleType;
     creation_time?: string;
     created_at?: string;
 };
@@ -182,13 +217,28 @@ export const api = {
         return extractRules(res);
     },
 
-    addCustomRule: async (domain: string): Promise<CustomRule> => {
+    addCustomRule: async (value: string, ruleType: RuleType = 'domain'): Promise<CustomRule> => {
         const res = await fetchWithAuth('/sync/custom/user', {
             method: 'POST',
-            body: JSON.stringify({
-                value: domain,
-                rule_type: 'domain',
-            }),
+            body: JSON.stringify({ value, rule_type: ruleType }),
+        });
+        const rule = res?.data ?? res;
+        return {
+            id: rule.id,
+            value: rule.value,
+            rule_type: rule.rule_type,
+            created_at: rule.creation_time ?? rule.created_at,
+        };
+    },
+
+    updateCustomRule: async (
+        ruleId: string,
+        value: string,
+        ruleType: RuleType
+    ): Promise<CustomRule> => {
+        const res = await fetchWithAuth(`/sync/custom/user/${ruleId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ value, rule_type: ruleType }),
         });
         const rule = res?.data ?? res;
         return {
@@ -338,31 +388,72 @@ export const pairingApi = {
     },
 };
 
+// Lista general del sistema: pública (solo requiere x-api-key)
+export const syncApi = {
+    /**
+     * GET /sync/system. Si se envían versión y checksum y coinciden con los del servidor,
+     * responde UP_TO_DATE sin la lista; si no, RESET con la lista completa.
+     */
+    getSystemRules: async (meta?: { version: number; checksum: string }): Promise<SystemSyncResponse> => {
+        const qs = meta
+            ? `?version=${encodeURIComponent(String(meta.version))}&checksum=${encodeURIComponent(meta.checksum)}`
+            : '';
+        const res = await fetch(`${API_URL}/sync/system${qs}`, {
+            headers: { 'x-api-key': API_KEY },
+        });
+        if (!res.ok) throw new Error(await readError(res, 'No se pudo obtener la lista general'));
+        return res.json();
+    },
+};
+
+/**
+ * GET /sync/custom/device con device_token + device_uuid. Traduce el estado del vínculo:
+ *   200 -> ok | 403 "pendiente" -> pending | 401/403 restantes -> unlinked | sin red -> offline.
+ */
+async function fetchDeviceCustomRules(
+    meta?: { timestamp: number; checksum: string }
+): Promise<DeviceSyncResult> {
+    const token = await deviceSession.getToken();
+    if (!token) return { kind: 'state', state: 'unlinked' };
+    const uuid = await getOrCreateDeviceUuid();
+
+    let qs = `?device_uuid=${encodeURIComponent(uuid)}`;
+    if (meta) {
+        qs += `&client_timestamp=${encodeURIComponent(String(meta.timestamp))}`;
+        qs += `&client_checksum=${encodeURIComponent(meta.checksum)}`;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/sync/custom/device${qs}`, {
+            headers: { 'x-api-key': API_KEY, Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+            const body = await res.json();
+            return { kind: 'ok', response: body.data ?? body };
+        }
+        const msg = (await readError(res, '')).toLowerCase();
+        if (res.status === 403 && msg.includes('pendiente')) return { kind: 'state', state: 'pending' };
+        return { kind: 'state', state: 'unlinked' }; // token inválido, revocado o desvinculado
+    } catch {
+        return { kind: 'offline' };
+    }
+}
+
 // Operaciones autenticadas con device_token + device_uuid (dispositivo protegido)
 export const deviceApi = {
+    fetchCustomRules: fetchDeviceCustomRules,
+
     /**
-     * Consulta el estado real del vínculo. No existe aún un endpoint dedicado,
-     * así que se usa GET /sync/custom/device, que exige estado 'linked':
-     *   200 -> linked | 403 "pendiente" -> pending | 401/403 "desvinculado" -> unlinked.
+     * Consulta el estado real del vínculo contra el backend. No existe aún un endpoint
+     * dedicado, así que se deduce de GET /sync/custom/device (ver fetchDeviceCustomRules).
      * Devuelve null si no hay token guardado (nunca se vinculó).
      */
     getLinkState: async (): Promise<DeviceLinkState | null> => {
-        const token = await deviceSession.getToken();
-        if (!token) return null;
-        const uuid = await getOrCreateDeviceUuid();
-
-        try {
-            const res = await fetch(
-                `${API_URL}/sync/custom/device?device_uuid=${encodeURIComponent(uuid)}`,
-                { headers: { 'x-api-key': API_KEY, Authorization: `Bearer ${token}` } }
-            );
-            if (res.ok) return 'linked';
-            const msg = (await readError(res, '')).toLowerCase();
-            if (res.status === 403 && msg.includes('pendiente')) return 'pending';
-            return 'unlinked'; // token inválido, revocado o dispositivo desvinculado
-        } catch {
-            return 'offline'; // sin red: no se puede afirmar que se desvinculó
-        }
+        if (!(await deviceSession.getToken())) return null;
+        const result = await fetchDeviceCustomRules();
+        if (result.kind === 'ok') return 'linked';
+        if (result.kind === 'offline') return 'offline';
+        return result.state;
     },
 
     /** Confirma la desvinculación. Solo funciona si el responsable la solicitó antes. */

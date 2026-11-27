@@ -1,8 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 import Button from '../components/Button';
 import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components';
 import { deviceApi, pairingApi, type DeviceLinkState } from '../services/api';
+import {
+    clearDeviceRulesCache,
+    getCachedSystemRules,
+    syncDeviceRules,
+    syncSystemRules,
+    type DeviceRulesCache,
+    type SystemRulesCache,
+} from '../services/rulesSync';
+import { notify } from '../utils/notify';
 import type { AppScreenProps } from '../navigation/types';
 
 type ViewState = 'loading' | 'unlinked' | DeviceLinkState;
@@ -11,11 +20,32 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
     const [codigo, setCodigo] = useState('');
     const [state, setState] = useState<ViewState>('loading');
     const [busy, setBusy] = useState(false);
+    const [syncing, setSyncing] = useState(false);
+    const [syncError, setSyncError] = useState<string | null>(null);
+    const [systemRules, setSystemRules] = useState<SystemRulesCache | null>(null);
+    const [deviceRules, setDeviceRules] = useState<DeviceRulesCache | null>(null);
 
-    // Recupera el vínculo guardado y lo valida contra el backend (no un booleano local)
+    // Valida el vínculo contra el backend y descarga lista general + personalizada.
+    // Si algo falla, se conserva y muestra la última lista válida guardada.
     const refreshState = useCallback(async () => {
-        const result = await deviceApi.getLinkState();
-        setState(result ?? 'unlinked');
+        setSyncing(true);
+        setSyncError(null);
+        try {
+            const outcome = await syncDeviceRules();
+            setState(outcome.state);
+            setDeviceRules(outcome.rules);
+
+            if (outcome.state === 'linked' || outcome.state === 'offline') {
+                try {
+                    setSystemRules(await syncSystemRules());
+                } catch (e: any) {
+                    setSyncError(e?.message || 'No se pudo actualizar la lista general.');
+                    setSystemRules(await getCachedSystemRules());
+                }
+            }
+        } finally {
+            setSyncing(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -23,14 +53,15 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
     }, [refreshState]);
 
     const handleVincular = async () => {
-        if (codigo.length !== 6) return Alert.alert('Error', 'El código debe tener 6 dígitos.');
+        if (codigo.length !== 6) return notify('Error', 'El código debe tener 6 dígitos.');
         setBusy(true);
         try {
             await pairingApi.consumePairingCode(codigo, 'Dispositivo protegido');
             setCodigo('');
             setState('linked');
+            refreshState(); // primera sincronización de reglas
         } catch (error: any) {
-            Alert.alert('No se pudo vincular', error.message);
+            notify('No se pudo vincular', error.message);
         } finally {
             setBusy(false);
         }
@@ -41,9 +72,11 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
         setBusy(true);
         try {
             await deviceApi.confirmUnlink();
+            await clearDeviceRulesCache();
+            setDeviceRules(null);
             setState('unlinked');
         } catch (error: any) {
-            Alert.alert('Desvinculación', error.message);
+            notify('Desvinculación', error.message);
         } finally {
             setBusy(false);
         }
@@ -83,6 +116,9 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
         );
     }
 
+    const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString('es-AR') : '—');
+    const lastUpdate = deviceRules?.updatedAt ?? systemRules?.updatedAt;
+
     return (
         <FigmaScreen>
             <PageTitle
@@ -93,13 +129,37 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
                         : 'Este dispositivo está vinculado a la cuenta del responsable.'
                 }
             />
+
             {state === 'offline' ? (
+                <Text style={styles.warning}>
+                    No se pudo verificar el estado (sin conexión). Se muestra la última lista guardada.
+                </Text>
+            ) : null}
+            {syncError ? <Text style={styles.warning}>{syncError}</Text> : null}
+
+            {state !== 'pending' ? (
                 <SurfaceCard>
-                    <Text style={styles.note}>
-                        No se pudo verificar el estado (sin conexión). Reintentá más tarde.
-                    </Text>
+                    <Text style={styles.cardTitle}>Reglas sincronizadas</Text>
+                    <View style={styles.ruleRow}>
+                        <Text style={styles.ruleLabel}>Lista general</Text>
+                        <Text style={styles.ruleValue}>
+                            {systemRules
+                                ? `${systemRules.total} reglas · v${systemRules.version}`
+                                : 'Sin sincronizar'}
+                        </Text>
+                    </View>
+                    <View style={styles.ruleRow}>
+                        <Text style={styles.ruleLabel}>Lista personalizada</Text>
+                        <Text style={styles.ruleValue}>
+                            {deviceRules
+                                ? `${deviceRules.domain.length} dominios · ${deviceRules.keyword.length} palabras`
+                                : 'Sin sincronizar'}
+                        </Text>
+                    </View>
+                    <Text style={styles.note}>Última actualización: {fmt(lastUpdate)}</Text>
                 </SurfaceCard>
             ) : null}
+
             <View style={styles.actions}>
                 {state === 'pending' ? (
                     <Button
@@ -107,8 +167,13 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
                         disabled={busy}
                         onPress={handleConfirmUnlink}
                     />
-                ) : null}
-                <Button label="Actualizar estado" variant="outline" onPress={refreshState} />
+                ) : (
+                    <Button
+                        label={syncing ? 'Actualizando...' : 'Actualizar reglas'}
+                        disabled={syncing}
+                        onPress={refreshState}
+                    />
+                )}
             </View>
         </FigmaScreen>
     );
@@ -127,6 +192,11 @@ const styles = StyleSheet.create({
         letterSpacing: 8,
         marginBottom: 24,
     },
-    note: { color: FIGMA_COLORS.muted, fontSize: 14, textAlign: 'center' },
+    note: { color: FIGMA_COLORS.muted, fontSize: 12, marginTop: 10 },
+    warning: { color: FIGMA_COLORS.warning, fontSize: 13, marginBottom: 12 },
+    cardTitle: { color: FIGMA_COLORS.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },
+    ruleRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+    ruleLabel: { color: FIGMA_COLORS.muted, fontSize: 13 },
+    ruleValue: { color: FIGMA_COLORS.text, fontSize: 13, fontWeight: '600' },
     actions: { gap: 10, marginTop: 20 },
 });

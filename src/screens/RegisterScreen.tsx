@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View, Alert, Linking, TouchableOpacity, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View, Linking, TouchableOpacity, Text } from 'react-native';
 import Button from '../components/Button';
 import CheckOption from '../components/CheckOption';
 import TextField from '../components/TextField';
@@ -10,6 +10,7 @@ import {
 } from '../components';
 import { api } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
+import { notify } from '../utils/notify';
 
 export default function RegisterScreen({ navigation }: AppScreenProps<'Register'>) {
     const [name, setName] = useState('');
@@ -34,7 +35,7 @@ export default function RegisterScreen({ navigation }: AppScreenProps<'Register'
             navigation.replace('ResponsibleMode');
         } catch (error: any) {
             // ESTO ES LO QUE DEBES MEJORAR:
-            Alert.alert('Error de registro', error.message);
+            notify('Error de registro', error.message);
             // O si usas un estado para mostrar el error en pantalla:
             // setErrorMsg(error.message);
         } finally {
