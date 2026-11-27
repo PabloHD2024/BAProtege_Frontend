@@ -1,12 +1,5 @@
 import React, { useRef } from 'react';
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    type TextInputInstance,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance, } from 'react-native';
 import { FIGMA_COLORS } from './FigmaScreen';
 
 type PinEntryProps = {
@@ -20,7 +13,7 @@ type PinEntryProps = {
 export default function PinEntry({
                                      value,
                                      onChangeText,
-                                     length = 5,
+                                     length = 6,
                                      masked = false,
                                      accessibilityLabel,
                                  }: PinEntryProps) {
