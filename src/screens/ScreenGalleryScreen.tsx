@@ -41,7 +41,6 @@ export default function ScreenGalleryScreen({
     { title: 'Summary', description: 'Resumen de configuración.', onPress: () => navigation.navigate('Summary') },
     { title: 'Activating', description: 'Activando protección.', onPress: () => navigation.navigate('Activating') },
     { title: 'ResponsibleMode', description: 'Home del responsable.', onPress: () => navigation.navigate('ResponsibleMode') },
-    { title: 'ProtectedCode', description: 'Código del modo protegido.', onPress: () => navigation.navigate('ProtectedCode') },
     { title: 'ProtectedHome', description: 'Home del dispositivo protegido.', onPress: () => navigation.navigate('ProtectedHome') },
     { title: 'Interrupted', description: 'Confirmación de bloqueo aplicado.', onPress: () => navigation.navigate('Interrupted') },
     { title: 'Settings', description: 'Configuración del control parental.', onPress: () => navigation.navigate('Settings') },

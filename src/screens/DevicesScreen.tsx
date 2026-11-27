@@ -1,36 +1,46 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Laptop, Smartphone, Tablet } from 'lucide-react-native';
 import Button from '../components/Button';
 import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components';
 import { api, type Device } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
 
-const iconFor = (platform?: string) => {
-    switch (platform) {
-        case 'tablet':
-            return <Tablet color={FIGMA_COLORS.primary} size={20} />;
-        case 'laptop':
-            return <Laptop color={FIGMA_COLORS.primary} size={20} />;
-        default:
-            return <Smartphone color={FIGMA_COLORS.primary} size={20} />;
+const iconFor = (osModel?: string | null) => {
+    const m = (osModel ?? '').toLowerCase();
+    if (m.includes('tablet') || m.includes('ipad')) {
+        return <Tablet color={FIGMA_COLORS.primary} size={20} />;
     }
+    if (m.includes('browser') || m.includes('laptop') || m.includes('desktop')) {
+        return <Laptop color={FIGMA_COLORS.primary} size={20} />;
+    }
+    return <Smartphone color={FIGMA_COLORS.primary} size={20} />;
 };
 
 const statusLabel = (device: Device): { text: string; color: string } => {
-    if (device.protection_status) {
-        return { text: 'Vinculado', color: FIGMA_COLORS.positive };
+    switch (device.status) {
+        case 'linked':
+            return device.protection_status
+                ? { text: 'Vinculado · protegido', color: FIGMA_COLORS.positive }
+                : { text: 'Vinculado · sin protección', color: FIGMA_COLORS.warning };
+        case 'pending':
+            return { text: 'Desvinculación pendiente', color: FIGMA_COLORS.warning };
+        default:
+            return { text: 'Desvinculado', color: FIGMA_COLORS.muted };
     }
-    return { text: 'Pendiente de configurar', color: FIGMA_COLORS.warning };
 };
 
 export default function DevicesScreen({ navigation }: AppScreenProps<'Devices'>) {
     const [devices, setDevices] = useState<Device[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadDevices();
-    }, []);
+    // Recarga cada vez que la pantalla gana foco (p. ej. al volver de generar un PIN)
+    useFocusEffect(
+        useCallback(() => {
+            loadDevices();
+        }, [])
+    );
 
     const loadDevices = async () => {
         try {
@@ -65,8 +75,8 @@ export default function DevicesScreen({ navigation }: AppScreenProps<'Devices'>)
                                 key={device.id}
                                 style={[styles.row, index > 0 && styles.divided]}
                             >
-                                <View style={styles.iconWrap}>{iconFor(device.platform)}</View>
-                                <Text style={[figmaStyles.rowTitle, styles.name]}>{device.name}</Text>
+                                <View style={styles.iconWrap}>{iconFor(device.os_model)}</View>
+                                <Text style={[figmaStyles.rowTitle, styles.name]}>{device.alias_name}</Text>
                                 <Text style={[styles.status, { color: status.color }]}>
                                     {status.text}
                                 </Text>
@@ -78,7 +88,7 @@ export default function DevicesScreen({ navigation }: AppScreenProps<'Devices'>)
             <ScreenFooter>
                 <Button
                     label="Vincular nuevo dispositivo"
-                    onPress={() => navigation.navigate('LinkNewDeviceGuide')}
+                    onPress={() => navigation.navigate('ConfigureAccess')}
                 />
             </ScreenFooter>
         </FigmaScreen>

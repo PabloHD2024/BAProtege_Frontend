@@ -56,7 +56,7 @@ export default function OnboardingScreen({
                 <TouchableOpacity
                     accessibilityLabel="Omitir onboarding"
                     accessibilityRole="button"
-                    onPress={() => navigation.replace('Welcome')}
+                    onPress={() => navigation.replace('RoleSelection')}
                     style={styles.skip}
                 >
                     <Text style={styles.skipText}>Omitir</Text>

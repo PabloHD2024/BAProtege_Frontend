@@ -32,7 +32,6 @@ export type RootStackParamList = {
   BackgroundWork: undefined;
   AccessCodeSetup: undefined;
   AccessCodeConfirmation: { accessCode: string };
-  ProtectedCode: undefined;
   ProtectedHome: undefined;
   Settings: undefined;
   CustomList: undefined;

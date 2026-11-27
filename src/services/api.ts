@@ -1,5 +1,6 @@
 import { tokenStorage } from './tokenStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deviceSession } from './deviceSession';
+import { getOrCreateDeviceUuid } from './deviceIdentity';
 
 // Asegurate de tener EXPO_PUBLIC_API_URL en tu archivo .env
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://10.10.0.181:3000').replace(/\/$/, '');
@@ -12,15 +13,22 @@ export type CustomRule = {
     created_at?: string;
 };
 
+export type DeviceStatus = 'linked' | 'pending' | 'unlinked';
+
+/** Dispositivo tal como lo devuelve GET /devices (campos del backend). */
 export type Device = {
     id: string;
     device_uuid: string;
-    name: string;
-    platform?: string;
+    alias_name: string;
+    os_model?: string | null;
+    status: DeviceStatus;
     protection_status: boolean;
-    linked_at?: string;
-    last_seen?: string;
+    last_ping?: string | null;
+    creation_time?: string;
 };
+
+/** Resultado de consultar el estado del dispositivo protegido contra el backend. */
+export type DeviceLinkState = 'linked' | 'pending' | 'unlinked' | 'offline';
 
 type RawCustomRule = {
     id: string;
@@ -199,9 +207,14 @@ export const api = {
 
     // --- DISPOSITIVOS ---
     getDevices: async (): Promise<Device[]> => {
+        // El backend responde { devices: [...] }
         const res = await fetchWithAuth('/devices');
-        const data = res?.data ?? res;
-        return Array.isArray(data) ? data : [];
+        return Array.isArray(res?.devices) ? res.devices : [];
+    },
+
+    // El responsable solicita la desvinculación: el dispositivo pasa a 'pending'
+    requestUnlink: async (deviceId: string): Promise<void> => {
+        await fetchWithAuth(`/devices/${deviceId}/unlink`, { method: 'POST' });
     },
 
     // --- REGISTRO + LOGIN AUTOMÁTICO ---
@@ -282,47 +295,90 @@ export const api = {
 
 };
 
-// Agregar esto dentro del objeto api (o exportarlo por separado)
+async function readError(res: Response, fallback: string): Promise<string> {
+    const body = await res.json().catch(() => ({}));
+    return body.error || body.message || fallback;
+}
+
 export const pairingApi = {
     // 1. El responsable genera el código
-    generatePairingCode: async () => {
+    generatePairingCode: async (): Promise<{ code: string; expiresAt: string }> => {
         const token = await tokenStorage.getAccessToken();
         const res = await fetch(`${API_URL}/pairing/generate`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': API_KEY,
-                'Authorization': `Bearer ${token}` 
-            }
+                Authorization: `Bearer ${token}`,
+            },
         });
-        if (!res.ok) throw new Error("Error al generar el código");
-        return res.json(); // Devuelve { code: "123456", expiresAt: "..." }
+        if (!res.ok) throw new Error(await readError(res, 'Error al generar el código'));
+        return res.json();
     },
 
-    // 2. El protegido ingresa el código
-    consumePairingCode: async (code: string, deviceUuid: string, alias: string) => {
+    // 2. El protegido ingresa el código. Usa siempre el UUID persistente.
+    consumePairingCode: async (code: string, alias: string) => {
+        const deviceUuid = await getOrCreateDeviceUuid();
         const res = await fetch(`${API_URL}/pairing/consume`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-api-key': API_KEY 
-            },
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
             body: JSON.stringify({
-                code: code,
+                code,
                 device_uuid: deviceUuid,
                 alias_name: alias,
-                os_model: "Web Browser"
-            })
+                os_model: 'Web Browser',
+            }),
         });
-        
+
+        if (!res.ok) throw new Error(await readError(res, 'PIN inválido o expirado'));
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "PIN inválido o expirado");
-        
-        // Guardamos el token del dispositivo
-        await AsyncStorage.setItem('@device_token', data.device_token);
-        await AsyncStorage.setItem('@device_uuid', deviceUuid);
+        await deviceSession.setToken(data.device_token);
         return data;
-    }
-    
+    },
 };
 
+// Operaciones autenticadas con device_token + device_uuid (dispositivo protegido)
+export const deviceApi = {
+    /**
+     * Consulta el estado real del vínculo. No existe aún un endpoint dedicado,
+     * así que se usa GET /sync/custom/device, que exige estado 'linked':
+     *   200 -> linked | 403 "pendiente" -> pending | 401/403 "desvinculado" -> unlinked.
+     * Devuelve null si no hay token guardado (nunca se vinculó).
+     */
+    getLinkState: async (): Promise<DeviceLinkState | null> => {
+        const token = await deviceSession.getToken();
+        if (!token) return null;
+        const uuid = await getOrCreateDeviceUuid();
+
+        try {
+            const res = await fetch(
+                `${API_URL}/sync/custom/device?device_uuid=${encodeURIComponent(uuid)}`,
+                { headers: { 'x-api-key': API_KEY, Authorization: `Bearer ${token}` } }
+            );
+            if (res.ok) return 'linked';
+            const msg = (await readError(res, '')).toLowerCase();
+            if (res.status === 403 && msg.includes('pendiente')) return 'pending';
+            return 'unlinked'; // token inválido, revocado o dispositivo desvinculado
+        } catch {
+            return 'offline'; // sin red: no se puede afirmar que se desvinculó
+        }
+    },
+
+    /** Confirma la desvinculación. Solo funciona si el responsable la solicitó antes. */
+    confirmUnlink: async (): Promise<void> => {
+        const token = await deviceSession.getToken();
+        const uuid = await getOrCreateDeviceUuid();
+        const res = await fetch(`${API_URL}/devices/confirm-unlink`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY,
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ device_uuid: uuid }),
+        });
+        if (!res.ok) throw new Error(await readError(res, 'No se pudo confirmar la desvinculación'));
+        await deviceSession.clear();
+    },
+};

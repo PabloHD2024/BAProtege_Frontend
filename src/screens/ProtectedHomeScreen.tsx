@@ -1,96 +1,132 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Pressable, StatusBar, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { pairingApi } from '../services/api'; // Asegúrate que la ruta sea correcta
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import Button from '../components/Button';
+import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components';
+import { deviceApi, pairingApi, type DeviceLinkState } from '../services/api';
 import type { AppScreenProps } from '../navigation/types';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'ProtectedHome'>) {
+type ViewState = 'loading' | 'unlinked' | DeviceLinkState;
+
+export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) {
     const [codigo, setCodigo] = useState('');
-    const [estaVinculado, setEstaVinculado] = useState(false); 
-    const [loading, setLoading] = useState(false);
+    const [state, setState] = useState<ViewState>('loading');
+    const [busy, setBusy] = useState(false);
+
+    // Recupera el vínculo guardado y lo valida contra el backend (no un booleano local)
+    const refreshState = useCallback(async () => {
+        const result = await deviceApi.getLinkState();
+        setState(result ?? 'unlinked');
+    }, []);
+
+    useEffect(() => {
+        refreshState();
+    }, [refreshState]);
 
     const handleVincular = async () => {
-        if (codigo.length < 6) return Alert.alert("Error", "El código debe tener 6 dígitos.");
-        
-        setLoading(true);
+        if (codigo.length !== 6) return Alert.alert('Error', 'El código debe tener 6 dígitos.');
+        setBusy(true);
         try {
-            // Simulamos un UUID (En producción usarías expo-crypto o similar)
-            const fakeUuid = Math.random().toString(36).substring(2, 15);
-            
-            await pairingApi.consumePairingCode(codigo, fakeUuid, "Celular Protegido");
-            
-            setEstaVinculado(true);
-            setCodigo(''); 
-            Alert.alert("¡Éxito!", "El dispositivo ha sido vinculado correctamente al Backend.");
+            await pairingApi.consumePairingCode(codigo, 'Dispositivo protegido');
+            setCodigo('');
+            setState('linked');
         } catch (error: any) {
-            Alert.alert("Error de vinculación", error.message);
+            Alert.alert('No se pudo vincular', error.message);
         } finally {
-            setLoading(false);
+            setBusy(false);
         }
     };
 
-    const handleDesbloquear = async () => {
-        // En una app real, acá llamarías al backend para desvincular
-        await AsyncStorage.removeItem('@device_token');
-        await AsyncStorage.removeItem('@device_uuid');
-        navigation.replace('Login'); 
+    // Solo confirma una desvinculación que el responsable ya solicitó desde su cuenta
+    const handleConfirmUnlink = async () => {
+        setBusy(true);
+        try {
+            await deviceApi.confirmUnlink();
+            setState('unlinked');
+        } catch (error: any) {
+            Alert.alert('Desvinculación', error.message);
+        } finally {
+            setBusy(false);
+        }
     };
 
-    if (!estaVinculado) {
+    if (state === 'loading') {
         return (
-            <SafeAreaView style={styles.root}>
-                <StatusBar barStyle="dark-content" />
-                <View style={styles.container}>
-                    <Text style={styles.icon}>🔗</Text>
-                    <Text style={styles.title}>Vincular Dispositivo</Text>
-                    <Text style={styles.subtitle}>
-                        Pedile al Responsable que ingrese el código generado en su panel.
-                    </Text>
+            <FigmaScreen>
+                <ActivityIndicator color={FIGMA_COLORS.primary} style={{ marginVertical: 60 }} />
+            </FigmaScreen>
+        );
+    }
 
-                    <TextInput
-                        style={styles.input}
-                        placeholder="000000"
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        value={codigo}
-                        onChangeText={setCodigo}
-                        textAlign="center"
-                    />
-
-                    <Pressable style={styles.button} onPress={handleVincular} disabled={loading}>
-                        <Text style={styles.buttonText}>{loading ? "Validando..." : "Activar Protección"}</Text>
-                    </Pressable>
-                </View>
-            </SafeAreaView>
+    if (state === 'unlinked') {
+        return (
+            <FigmaScreen>
+                <PageTitle
+                    title="Vincular dispositivo"
+                    subtitle="Ingresá el código de 6 dígitos que generó el responsable desde su panel."
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="000000"
+                    placeholderTextColor={FIGMA_COLORS.muted}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={codigo}
+                    onChangeText={t => setCodigo(t.replace(/\D/g, ''))}
+                    textAlign="center"
+                />
+                <Button
+                    label={busy ? 'Validando...' : 'Vincular'}
+                    disabled={busy || codigo.length !== 6}
+                    onPress={handleVincular}
+                />
+            </FigmaScreen>
         );
     }
 
     return (
-        <SafeAreaView style={styles.root}>
-            <StatusBar barStyle="dark-content" />
-            <View style={styles.container}>
-                <Text style={styles.icon}>🔒</Text>
-                <Text style={styles.title}>Dispositivo Protegido</Text>
-                <Text style={styles.subtitle}>
-                    Este dispositivo ya está vinculado a la cuenta del responsable.
-                </Text>
-
-                <Pressable style={[styles.button, { backgroundColor: '#2E7D32', marginTop: 30 }]} onPress={handleDesbloquear}>
-                    <Text style={styles.buttonText}>Desvincular (Simulado)</Text>
-                </Pressable>
+        <FigmaScreen>
+            <PageTitle
+                title="Dispositivo protegido"
+                subtitle={
+                    state === 'pending'
+                        ? 'El responsable solicitó desvincular este dispositivo.'
+                        : 'Este dispositivo está vinculado a la cuenta del responsable.'
+                }
+            />
+            {state === 'offline' ? (
+                <SurfaceCard>
+                    <Text style={styles.note}>
+                        No se pudo verificar el estado (sin conexión). Reintentá más tarde.
+                    </Text>
+                </SurfaceCard>
+            ) : null}
+            <View style={styles.actions}>
+                {state === 'pending' ? (
+                    <Button
+                        label={busy ? 'Confirmando...' : 'Confirmar desvinculación'}
+                        disabled={busy}
+                        onPress={handleConfirmUnlink}
+                    />
+                ) : null}
+                <Button label="Actualizar estado" variant="outline" onPress={refreshState} />
             </View>
-        </SafeAreaView>
+        </FigmaScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#F5F7FA' },
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
-    icon: { fontSize: 80, marginBottom: 20 },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#1A1A1A', marginBottom: 10, textAlign: 'center' },
-    subtitle: { fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 30 },
-    input: { width: '80%', height: 60, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', borderRadius: 12, fontSize: 24, fontWeight: 'bold', letterSpacing: 8, marginBottom: 30 },
-    button: { backgroundColor: '#1976D2', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 12, width: '80%', alignItems: 'center' },
-    buttonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+    input: {
+        backgroundColor: FIGMA_COLORS.surface,
+        borderColor: FIGMA_COLORS.border,
+        borderRadius: 12,
+        borderWidth: 1,
+        color: FIGMA_COLORS.text,
+        fontSize: 24,
+        fontWeight: '700',
+        height: 60,
+        letterSpacing: 8,
+        marginBottom: 24,
+    },
+    note: { color: FIGMA_COLORS.muted, fontSize: 14, textAlign: 'center' },
+    actions: { gap: 10, marginTop: 20 },
 });

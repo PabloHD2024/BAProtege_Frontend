@@ -34,7 +34,7 @@ export default function UsageModeScreen({ navigation }: AppScreenProps<'UsageMod
                 title="Modo Protegido"
                 subtitle="Ingresá el código de acceso de tu responsable."
                 tone="positive"
-                onPress={() => navigation.navigate('ProtectedCode')}
+                onPress={() => navigation.navigate('ProtectedHome')}
             />
         </FigmaScreen>
     );
