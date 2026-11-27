@@ -15,7 +15,7 @@ export default function AccessCodeSetupScreen({
                                                 navigation,
                                               }: AppScreenProps<'AccessCodeSetup'>) {
   const [accessCode, setAccessCode] = useState('');
-  const isComplete = accessCode.length === 4;
+  const isComplete = accessCode.length === 6;
 
   return (
       <FigmaScreen onBack={() => navigation.goBack()}>
@@ -26,10 +26,10 @@ export default function AccessCodeSetupScreen({
         <View style={styles.hero}>
           <KeyRound color={FIGMA_COLORS.primary} size={34} />
         </View>
-        <Text style={styles.instruction}>Elegí un código numérico de 4 dígitos.</Text>
+        <Text style={styles.instruction}>Elegí un código numérico de 6 dígitos.</Text>
         <PinEntry
             accessibilityLabel="Código de acceso de cuatro dígitos"
-            length={4}
+            length={6}
             masked
             value={accessCode}
             onChangeText={setAccessCode}

@@ -40,12 +40,12 @@ export default function AccessCodeConfirmationScreen({
               Los códigos no coinciden. Volvé a intentarlo.
             </Text>
         ) : (
-            <Text style={styles.hint}>Ingresá nuevamente los 4 dígitos.</Text>
+            <Text style={styles.hint}>Ingresá nuevamente los 6 dígitos.</Text>
         )}
         <ScreenFooter>
           <Button
               label="Confirmar código"
-              disabled={confirmation.length !== 4 || mismatch}
+              disabled={confirmation.length !== 6 || mismatch}
               onPress={() => navigation.navigate('ResponsibleMode')}
           />
         </ScreenFooter>
