@@ -63,6 +63,14 @@ export default function LoginScreen({ navigation }: AppScreenProps<'Login'>) {
                     <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
                 </TouchableOpacity>
             </KeyboardAvoidingView>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('Register')}
+                style={{ marginTop: 15, alignSelf: 'center' }}
+            >
+                <Text style={{ color: FIGMA_COLORS.primary, fontSize: 14 }}>
+                    ¿No tenés cuenta? <Text style={{ fontWeight: 'bold' }}>Registrate acá</Text>
+                </Text>
+            </TouchableOpacity>
             <ScreenFooter>
                 <Button
                     label={loading ? 'Ingresando...' : 'Iniciar sesión'}
