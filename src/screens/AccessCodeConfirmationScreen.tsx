@@ -17,7 +17,7 @@ export default function AccessCodeConfirmationScreen({
                                                      }: AppScreenProps<'AccessCodeConfirmation'>) {
   const [confirmation, setConfirmation] = useState('');
   const mismatch =
-      confirmation.length === 4 && confirmation !== route.params.accessCode;
+      confirmation.length === 6 && confirmation !== route.params.accessCode;
 
   return (
       <FigmaScreen onBack={() => navigation.goBack()}>
@@ -30,7 +30,7 @@ export default function AccessCodeConfirmationScreen({
         </View>
         <PinEntry
             accessibilityLabel="Confirmar código de acceso"
-            length={4}
+            length={6}
             masked
             value={confirmation}
             onChangeText={setConfirmation}
