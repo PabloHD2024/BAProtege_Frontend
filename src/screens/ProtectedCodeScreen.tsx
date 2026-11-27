@@ -17,7 +17,7 @@ export default function ProtectedCodeScreen({
                                             }: AppScreenProps<'ProtectedCode'>) {
     const [code, setCode] = useState('');
     const [hintVisible, setHintVisible] = useState(false);
-    const ready = code.length === 5;
+    const ready = code.length === 4;
 
     const [deviceUuid, setDeviceUuid] = useState<string | null>(null);
 

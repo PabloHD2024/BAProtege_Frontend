@@ -17,7 +17,7 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
             <View style={styles.body}>
                 
                 <Image 
-                    source={require('../../assets/LogoBAProtege+ - Fdo Blanco.png')} 
+                    source={require('../../assets/LogoBAProtege.png')} 
                     style={{ width: 176, height: 176, resizeMode: 'contain' }} 
                 />
                 <Image 
