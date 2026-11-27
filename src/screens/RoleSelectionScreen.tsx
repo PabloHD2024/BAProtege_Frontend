@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, Pressable, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppScreenProps } from '../navigation/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,92 +8,46 @@ export default function RoleSelectionScreen({ navigation }: AppScreenProps<'Role
     return (
         <SafeAreaView style={styles.root}>
             <StatusBar barStyle="dark-content" />
-            
-            {/* Le puse un View con padding para que no quede pegado a los bordes */}
             <View style={styles.container}>
-                <Text style={styles.title}>¿Cómo vas a usar la app?</Text>
-                <Text style={styles.subtitle}>
-                    Elegí tu rol para continuar.
-                </Text>
+                <Text style={styles.pageTitle}>¿Cómo vas a usar la app?</Text>
 
-                <View style={styles.cardsContainer}>
-                    {/* BOTÓN RESPONSABLE (AZUL) */}
-                    <TouchableOpacity 
-                        style={[styles.card, { backgroundColor: '#1976D2' }]}
-                        onPress={() => navigation.navigate('Login')}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.cardTitle}>Soy Responsable</Text>
-                        <Text style={styles.cardDescription}>
-                            Administrá la protección.
-                        </Text>
-                    </TouchableOpacity>
+                {/* BOTÓN RESPONSABLE (AZUL) */}
+                <Pressable 
+                    style={({ pressed }) => [
+                        styles.button, 
+                        { backgroundColor: '#1976D2', opacity: pressed ? 0.8 : 1 }
+                    ]}
+                    onPress={() => navigation.navigate('Login')}
+                >
+                    <Text style={styles.buttonText}>Soy Responsable</Text>
+                </Pressable>
 
-                    {/* BOTÓN PROTEGIDO (VERDE) */}
-                    <TouchableOpacity 
-                        style={[styles.card, { backgroundColor: '#2E7D32' }]}
-                        onPress={async () => {
+                {/* BOTÓN PROTEGIDO (VERDE) */}
+                <Pressable 
+                    style={({ pressed }) => [
+                        styles.button, 
+                        { backgroundColor: '#2E7D32', opacity: pressed ? 0.8 : 1 }
+                    ]}
+                    onPress={async () => {
+                        try {
                             await AsyncStorage.setItem('@app_role', 'protected');
-                            navigation.replace('ProtectedCode'); 
-                        }}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.cardTitle}>Soy Protegido</Text>
-                        <Text style={styles.cardDescription}>
-                            Este dispositivo está protegido.
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                            navigation.replace('ProtectedHome'); 
+                        } catch (error) {
+                            console.log("Error:", error);
+                        }
+                    }}
+                >
+                    <Text style={styles.buttonText}>Soy Protegido</Text>
+                </Pressable>
             </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    root: {
-        flex: 1,
-        backgroundColor: '#F5F7FA', // Fondo gris claro para que resalte el texto
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 24,
-        justifyContent: 'center',
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: '#1A1A1A', // Texto oscuro para que se lea
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666666',
-        textAlign: 'center',
-        marginBottom: 40,
-    },
-    cardsContainer: {
-        gap: 20,
-    },
-    card: {
-        borderRadius: 16,
-        padding: 24,
-        alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-    },
-    cardTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#FFFFFF',
-        marginBottom: 8,
-    },
-    cardDescription: {
-        fontSize: 14,
-        color: '#E0E0E0',
-        textAlign: 'center',
-    },
+    root: { flex: 1, backgroundColor: '#F5F7FA' },
+    container: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
+    pageTitle: { fontSize: 24, fontWeight: 'bold', color: '#1A1A1A', textAlign: 'center', marginBottom: 40 },
+    button: { borderRadius: 16, paddingVertical: 24, alignItems: 'center', marginBottom: 20 },
+    buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
 });
