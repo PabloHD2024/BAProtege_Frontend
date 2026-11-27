@@ -7,7 +7,7 @@ import type { AppScreenProps } from '../navigation/types';
 export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
     useEffect(() => {
         // ⏱️ CAMBIO 1: Aumentamos el tiempo de 900 a 3000 (3 segundos)
-        const timer = setTimeout(() => navigation.replace('Onboarding', { step: 1 }), 3000);
+        const timer = setTimeout(() => navigation.replace('Onboarding', { step: 1 }), 4000);
         return () => clearTimeout(timer);
     }, [navigation]);
 
@@ -16,8 +16,6 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
             <StatusBar barStyle="light-content" />
             <View style={styles.body}>
                 
-                {/* 🖼️ CAMBIO 2: Reemplazamos el componente viejo por tu nueva imagen */}
-                {/* Asegúrate de poner el nombre correcto de tu archivo en la carpeta assets */}
                 <Image 
                     source={require('../../assets/LogoBAProtege+ - Fdo Blanco.png')} 
                     style={{ width: 176, height: 176, resizeMode: 'contain' }} 
@@ -26,9 +24,6 @@ export default function SplashScreen({ navigation }: AppScreenProps<'Splash'>) {
                     source={require('../../assets/logo blanco lotba_Mesa de trabajo 1.png')} 
                     style={{ width: 176, height: 176, resizeMode: 'contain' }} 
                 />
-
-                {/* ✏️ CAMBIO 3: Si quieres cambiar el texto, edítalo aquí */}
-                {/* <Text style={styles.brand}>Tu Nuevo Texto</Text> */}
 
             </View>
         </SafeAreaView>
