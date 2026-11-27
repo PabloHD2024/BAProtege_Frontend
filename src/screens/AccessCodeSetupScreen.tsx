@@ -3,12 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { KeyRound } from 'lucide-react-native';
 import Button from '../components/Button';
 import PinEntry from '../components/PinEntry';
-import {
-  FigmaScreen,
-  PageTitle,
-  ScreenFooter,
-  FIGMA_COLORS,
-} from '../components';
+import { FigmaScreen, PageTitle, ScreenFooter, FIGMA_COLORS, } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function AccessCodeSetupScreen({

@@ -2,14 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ShieldCheck } from 'lucide-react-native';
 import Button from '../components/Button';
-import {
-    FigmaScreen,
-    PageTitle,
-    ScreenFooter,
-    SurfaceCard,
-    FIGMA_COLORS,
-    figmaStyles,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, ScreenFooter, SurfaceCard, FIGMA_COLORS, figmaStyles, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function ActivateScreen({ navigation }: AppScreenProps<'Activate'>) {

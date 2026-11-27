@@ -1,4 +1,5 @@
 import { tokenStorage } from './tokenStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Asegurate de tener EXPO_PUBLIC_API_URL en tu archivo .env
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://10.10.0.181:3000').replace(/\/$/, '');
@@ -278,4 +279,50 @@ export const api = {
     logout: async () => {
         await tokenStorage.clearAll();
     },
+
 };
+
+// Agregar esto dentro del objeto api (o exportarlo por separado)
+export const pairingApi = {
+    // 1. El responsable genera el código
+    generatePairingCode: async () => {
+        const token = await tokenStorage.getAccessToken();
+        const res = await fetch(`${API_URL}/pairing/generate`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY,
+                'Authorization': `Bearer ${token}` 
+            }
+        });
+        if (!res.ok) throw new Error("Error al generar el código");
+        return res.json(); // Devuelve { code: "123456", expiresAt: "..." }
+    },
+
+    // 2. El protegido ingresa el código
+    consumePairingCode: async (code: string, deviceUuid: string, alias: string) => {
+        const res = await fetch(`${API_URL}/pairing/consume`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY 
+            },
+            body: JSON.stringify({
+                code: code,
+                device_uuid: deviceUuid,
+                alias_name: alias,
+                os_model: "Web Browser"
+            })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "PIN inválido o expirado");
+        
+        // Guardamos el token del dispositivo
+        await AsyncStorage.setItem('@device_token', data.device_token);
+        await AsyncStorage.setItem('@device_uuid', deviceUuid);
+        return data;
+    }
+    
+};
+

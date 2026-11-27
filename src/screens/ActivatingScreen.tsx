@@ -1,10 +1,6 @@
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import {
-    FigmaScreen,
-    PageTitle,
-    FIGMA_COLORS,
-} from '../components/FigmaScreen';
+import { FigmaScreen, PageTitle, FIGMA_COLORS, } from '../components/FigmaScreen';
 import type { AppScreenProps } from '../navigation/types';
 
 export default function ActivatingScreen({
