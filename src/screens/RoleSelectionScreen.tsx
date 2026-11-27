@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppScreenProps } from '../navigation/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RoleSelectionScreen({ navigation }: AppScreenProps<'RoleSelection'>) {
     return (
