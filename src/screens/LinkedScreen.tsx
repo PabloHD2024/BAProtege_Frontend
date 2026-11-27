@@ -47,4 +47,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 21,
     },
+
+    title: {
+        alignSelf: 'center',
+    }
 });
