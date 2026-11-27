@@ -28,7 +28,7 @@ export default function AccessCodeSetupScreen({
         </View>
         <Text style={styles.instruction}>Elegí un código numérico de 6 dígitos.</Text>
         <PinEntry
-            accessibilityLabel="Código de acceso de cuatro dígitos"
+            accessibilityLabel="Código de acceso de seis dígitos"
             length={6}
             masked
             value={accessCode}
