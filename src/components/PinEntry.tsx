@@ -11,6 +11,7 @@ type PinEntryProps = {
     /**
      * Solo con `masked`: el último dígito escrito se ve este tiempo (ms) antes de pasar a
      * círculo, como en los campos de contraseña del celular. 0 = se oculta de inmediato.
+     * Por defecto 700, así todos los campos de código ocultos se comportan igual.
      */
     revealDelayMs?: number;
     accessibilityLabel: string;
@@ -25,7 +26,7 @@ export default function PinEntry({
                                      onChangeText,
                                      length = 6,
                                      masked = false,
-                                     revealDelayMs = 0,
+                                     revealDelayMs = 700,
                                      accessibilityLabel,
                                      autoFocus = false,
                                      onSubmitEditing,

@@ -27,8 +27,12 @@ export default function AccessCodeConfirmationScreen({
             accessibilityLabel="Confirmar código de acceso"
             length={6}
             masked
+            autoFocus
             value={confirmation}
             onChangeText={setConfirmation}
+            onSubmitEditing={() => {
+              if (confirmation.length === 6 && !mismatch) navigation.navigate('ResponsibleMode');
+            }}
         />
         {mismatch ? (
             <Text accessibilityRole="alert" style={styles.error}>

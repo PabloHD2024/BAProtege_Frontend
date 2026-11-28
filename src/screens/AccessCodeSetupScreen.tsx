@@ -26,8 +26,12 @@ export default function AccessCodeSetupScreen({
             accessibilityLabel="Código de acceso de seis dígitos"
             length={6}
             masked
+            autoFocus
             value={accessCode}
             onChangeText={setAccessCode}
+            onSubmitEditing={() => {
+              if (isComplete) navigation.navigate('AccessCodeConfirmation', { accessCode });
+            }}
         />
         <Text style={styles.hint}>No compartas este código con otras personas.</Text>
         <ScreenFooter>
