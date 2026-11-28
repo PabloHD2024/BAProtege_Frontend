@@ -94,6 +94,8 @@ export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'Prot
                         value={codigo}
                         onChangeText={setCodigo}
                         accessibilityLabel="Código de vinculación de 6 dígitos"
+                        masked
+                        revealDelayMs={700}
                         autoFocus
                         onSubmitEditing={() => {
                             if (codigo.length === 6 && !busy) handleVincular();

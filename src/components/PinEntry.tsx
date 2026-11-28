@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { FIGMA_COLORS } from './FigmaScreen';
 
@@ -6,7 +6,13 @@ type PinEntryProps = {
     value: string;
     onChangeText: (value: string) => void;
     length?: number;
+    /** Muestra un círculo en lugar de cada dígito. */
     masked?: boolean;
+    /**
+     * Solo con `masked`: el último dígito escrito se ve este tiempo (ms) antes de pasar a
+     * círculo, como en los campos de contraseña del celular. 0 = se oculta de inmediato.
+     */
+    revealDelayMs?: number;
     accessibilityLabel: string;
     /** Enfoca el campo al montar la pantalla (abre el teclado numérico). */
     autoFocus?: boolean;
@@ -19,10 +25,37 @@ export default function PinEntry({
                                      onChangeText,
                                      length = 6,
                                      masked = false,
+                                     revealDelayMs = 0,
                                      accessibilityLabel,
                                      autoFocus = false,
                                      onSubmitEditing,
                                  }: PinEntryProps) {
+    // Índice del dígito recién escrito que todavía se muestra (null = todos ocultos)
+    const [revealedIndex, setRevealedIndex] = useState<number | null>(null);
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(
+        () => () => {
+            if (timer.current) clearTimeout(timer.current);
+        },
+        []
+    );
+
+    const handleChange = (text: string) => {
+        const next = text.replace(/\D/g, '').slice(0, length);
+        if (timer.current) clearTimeout(timer.current);
+
+        // Solo se revela al escribir de a un dígito; al borrar o pegar todo queda oculto.
+        // Se decide acá (y no en un efecto) para que no haya un cuadro con el círculo antes del número.
+        if (masked && revealDelayMs > 0 && next.length === value.length + 1) {
+            setRevealedIndex(next.length - 1);
+            timer.current = setTimeout(() => setRevealedIndex(null), revealDelayMs);
+        } else {
+            setRevealedIndex(null);
+        }
+        onChangeText(next);
+    };
+
     return (
         // El input oculto cubre las casillas: tocarlas lo enfoca. No se usa un <button> de
         // envoltorio porque en Firefox un campo dentro de un botón no recibe foco ni texto.
@@ -30,9 +63,11 @@ export default function PinEntry({
             <View style={styles.row}>
                 {Array.from({ length }, (_, index) => (
                     <View key={index} style={styles.cell}>
-                        <Text style={styles.digit}>
-                            {value[index] ? (masked ? '•' : value[index]) : ''}
-                        </Text>
+                        {value[index] && masked && revealedIndex !== index ? (
+                            <View style={styles.dot} />
+                        ) : (
+                            <Text style={styles.digit}>{value[index] ?? ''}</Text>
+                        )}
                     </View>
                 ))}
             </View>
@@ -42,7 +77,7 @@ export default function PinEntry({
                 autoFocus={autoFocus}
                 keyboardType="number-pad"
                 maxLength={length}
-                onChangeText={text => onChangeText(text.replace(/\D/g, '').slice(0, length))}
+                onChangeText={handleChange}
                 onSubmitEditing={onSubmitEditing}
                 style={styles.hiddenInput}
                 textContentType="none"
@@ -77,6 +112,12 @@ const styles = StyleSheet.create({
         color: FIGMA_COLORS.primary,
         fontSize: 22,
         fontWeight: '700',
+    },
+    dot: {
+        backgroundColor: FIGMA_COLORS.text,
+        borderRadius: 7,
+        height: 14,
+        width: 14,
     },
     // Misma altura que las casillas y alineado con ellas (row tiene marginVertical: 10)
     hiddenInput: {
