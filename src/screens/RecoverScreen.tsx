@@ -77,7 +77,7 @@ export default function RecoverScreen({ navigation }: AppScreenProps<'Recover'>)
                     }}
                     onSubmitEditing={handleSend}
                     placeholder="nombre@ejemplo.com"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={FIGMA_COLORS.muted}
                     returnKeyType="send"
                     style={[styles.input, error ? styles.inputError : null]}
                     textContentType="emailAddress"
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     input: {
-        backgroundColor: '#FFFFFF',
-        borderColor: '#D1D5DB',
+        backgroundColor: FIGMA_COLORS.surface,
+        borderColor: FIGMA_COLORS.border,
         borderRadius: 10,
         borderWidth: 1,
         color: FIGMA_COLORS.text,
@@ -149,10 +149,10 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     inputError: {
-        borderColor: '#DC2626',
+        borderColor: FIGMA_COLORS.danger,
     },
     errorText: {
-        color: '#DC2626',
+        color: FIGMA_COLORS.danger,
         fontSize: 12,
         marginTop: 6,
     },

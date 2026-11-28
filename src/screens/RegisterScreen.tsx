@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import CheckOption from '../components/CheckOption';
 import TextField from '../components/TextField';
 import {
+    FIGMA_COLORS,
     FigmaScreen,
     PageTitle,
     ScreenFooter,
@@ -43,10 +44,11 @@ export default function RegisterScreen({ navigation }: AppScreenProps<'Register'
         }
     };
 
-    // Función para abrir los términos y condiciones
+    // URL del documento de términos y condiciones (configurable por entorno).
+    // Si no está definida no se muestra un enlace falso.
+    const termsUrl = process.env.EXPO_PUBLIC_TERMS_URL;
     const openTerms = () => {
-        // Puedes usar Linking para abrir una URL o navegar a una pantalla interna
-        Linking.openURL('https://tu-sitio-web.com/terminos-y-condiciones');
+        if (termsUrl) Linking.openURL(termsUrl).catch(() => {});
     };
 
     return (
@@ -81,9 +83,13 @@ export default function RegisterScreen({ navigation }: AppScreenProps<'Register'
                     <TouchableOpacity onPress={() => setAccepted(!accepted)} style={styles.textContainer}>
                         <Text style={styles.checkboxText}>
                             Acepto los{' '}
-                            <Text style={styles.link} onPress={openTerms}>
-                                términos y condiciones
-                            </Text>
+                            {termsUrl ? (
+                                <Text style={styles.link} onPress={openTerms}>
+                                    términos y condiciones
+                                </Text>
+                            ) : (
+                                'términos y condiciones'
+                            )}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -119,10 +125,10 @@ const styles = StyleSheet.create({
     },
     checkboxText: {
         fontSize: 14,
-        color: '#333', // Ajusta el color según tu tema
+        color: FIGMA_COLORS.text,
     },
     link: {
-        color: '#007AFF', // Color azul de enlace
+        color: FIGMA_COLORS.primary,
         textDecorationLine: 'underline',
     },
 });

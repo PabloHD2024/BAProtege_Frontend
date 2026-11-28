@@ -39,8 +39,8 @@ export default function ResponsibleModeScreen({
             />
             <ActionTile
                 icon={<ListChecks color={FIGMA_COLORS.surface} size={22} />}
-                title="Configuración"
-                subtitle="Configurá el control parental del modo responsable."
+                title="Resumen de protección"
+                subtitle="Consultá tus dispositivos, reglas y listas de bloqueo."
                 tone="primary"
                 variant="card"
                 onPress={() => navigation.navigate('Settings')}

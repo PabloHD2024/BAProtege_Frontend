@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     width: 42,
   },
   blockedIcon: { backgroundColor: FIGMA_COLORS.softPurple },
-  allowedIcon: { backgroundColor: '#F1F0F5' },
+  allowedIcon: { backgroundColor: FIGMA_COLORS.background },
   eventBody: { flex: 1 },
   site: { ...figmaStyles.rowTitle },
   detail: { color: FIGMA_COLORS.muted, fontSize: 12, marginTop: 4 },

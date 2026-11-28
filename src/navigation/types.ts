@@ -35,7 +35,6 @@ export type RootStackParamList = {
   ProtectedHome: undefined;
   ProtectionSimulator: undefined;
   Settings: undefined;
-  CustomList: undefined;
   Devices: undefined;
   ScreenGallery: undefined;
   RoleSelection: undefined;

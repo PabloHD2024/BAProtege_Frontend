@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     hero: {
         alignItems: 'center',
         alignSelf: 'center',
-        backgroundColor: '#E8F7EF',
+        backgroundColor: FIGMA_COLORS.positiveSoft,
         borderRadius: 50,
         height: 100,
         justifyContent: 'center',

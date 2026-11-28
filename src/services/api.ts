@@ -217,6 +217,18 @@ async function tryRefresh(): Promise<boolean> {
     return refreshPromise;
 }
 
+/**
+ * El backend responde 401 cuando el JWT del responsable es inválido o expiró.
+ * Por compatibilidad con despliegues anteriores, que respondían 403 con el mensaje
+ * "Token inválido o expirado", ese caso puntual también se trata como sesión expirada.
+ */
+async function isSessionExpired(response: Response): Promise<boolean> {
+    if (response.status === 401) return true;
+    if (response.status !== 403) return false;
+    const body = await response.clone().json().catch(() => ({}));
+    return typeof body?.error === 'string' && /token.*(inv[aá]lido|expirado)/i.test(body.error);
+}
+
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}, _retry = false) {
     const token = await tokenStorage.getAccessToken();
 
@@ -232,8 +244,9 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}, _retry
         headers,
     });
 
-    // El backend devuelve 403 (no 401) cuando el token expiró.
-    if (response.status === 401 || response.status === 403) {
+    // Solo una sesión expirada dispara el refresh. Un 403 es "autenticado pero sin permiso"
+    // y debe mostrarse como error normal, no cerrar la sesión.
+    if (await isSessionExpired(response)) {
         if (_retry) throw new Error('Sesión expirada. Volvé a iniciar sesión.');
         const refreshed = await tryRefresh();
         if (refreshed) return fetchWithAuth(endpoint, options, true);   // ← solo 1 reintento

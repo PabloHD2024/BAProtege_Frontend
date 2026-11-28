@@ -22,6 +22,7 @@ export const FIGMA_COLORS = {
   muted: '#777485',
   border: '#E8E6EF',
   positive: '#24A36A',
+  positiveSoft: '#E8F7EF',
   warning: '#F0A733',
   danger: '#D84E5B',
   softPurple: '#EFEDFA',

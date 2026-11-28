@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   status: {
-    backgroundColor: '#E8F7EF',
+    backgroundColor: FIGMA_COLORS.positiveSoft,
     borderRadius: 20,
     paddingHorizontal: 9,
     paddingVertical: 5,

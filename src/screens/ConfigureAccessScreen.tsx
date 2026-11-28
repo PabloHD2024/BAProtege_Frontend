@@ -1,68 +1,78 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { pairingApi } from '../services/api'; // Asegurate de que la ruta sea correcta
-import type { AppScreenProps } from '../navigation/types';
+import { StyleSheet, Text } from 'react-native';
+import Button from '../components/Button';
+import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components';
+import { pairingApi } from '../services/api';
+import { formatDateTime } from '../utils/format';
 import { notify } from '../utils/notify';
+import type { AppScreenProps } from '../navigation/types';
 
 export default function ConfigureAccessScreen({ navigation }: AppScreenProps<'ConfigureAccess'>) {
     const [pin, setPin] = useState('');
+    const [expiresAt, setExpiresAt] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const generarCodigo = async () => {
         setLoading(true);
         try {
-            // Llamamos al Backend para que genere el PIN real
+            // El backend genera el PIN real de 6 dígitos (vence a los 10 minutos)
             const response = await pairingApi.generatePairingCode();
-            setPin(response.code); // Guardamos el PIN devuelto (ej. "492015")
+            setPin(response.code);
+            setExpiresAt(response.expiresAt ?? null);
         } catch (error: any) {
-            notify("Error", error.message || "No se pudo generar el código");
+            notify('Error', error.message || 'No se pudo generar el código');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <SafeAreaView style={styles.root}>
-            <StatusBar barStyle="dark-content" />
-            <View style={styles.container}>
-                
-                {pin ? (
-                    // Si ya tenemos el PIN, lo mostramos en grande
-                    <View style={styles.pinContainer}>
-                        <Text style={styles.title}>Código de Vinculación</Text>
-                        <Text style={styles.pinText}>{pin}</Text>
-                        <Text style={styles.pinExpiry}>Ingresá este código en el celular del protegido. Válido por 10 minutos.</Text>
-                    </View>
-                ) : (
-                    // Si no hay PIN, mostramos el botón azul para generarlo
-                    <Pressable 
-                        style={[styles.button, loading && { opacity: 0.5 }]} 
-                        onPress={generarCodigo} 
-                        disabled={loading}
-                    >
-                        <Text style={styles.buttonText}>
-                            {loading ? "Generando código..." : "Generar Código de Acceso"}
-                        </Text>
-                    </Pressable>
-                )}
+        <FigmaScreen onBack={() => navigation.goBack()}>
+            <PageTitle
+                title="Vincular dispositivo"
+                subtitle="Generá un código temporal e ingresalo en el dispositivo protegido."
+            />
 
-                <Pressable onPress={() => navigation.goBack()} style={{ marginTop: 30 }}>
-                    <Text style={styles.backText}>Volver</Text>
-                </Pressable>
-            </View>
-        </SafeAreaView>
+            {pin ? (
+                <>
+                    <SurfaceCard style={styles.pinCard}>
+                        <Text style={styles.label}>Código de vinculación</Text>
+                        <Text style={styles.pin}>{pin}</Text>
+                        <Text style={styles.note}>
+                            Ingresalo en el dispositivo protegido. Es de un solo uso y vence a los 10
+                            minutos{expiresAt ? ` (${formatDateTime(expiresAt)})` : ''}.
+                        </Text>
+                    </SurfaceCard>
+                    <Button
+                        label={loading ? 'Generando código...' : 'Generar nuevo código'}
+                        variant="outline"
+                        disabled={loading}
+                        onPress={generarCodigo}
+                    />
+                    <Text style={styles.spacer} />
+                    <Button label="Ver dispositivos" onPress={() => navigation.navigate('Devices')} />
+                </>
+            ) : (
+                <Button
+                    label={loading ? 'Generando código...' : 'Generar código de acceso'}
+                    disabled={loading}
+                    onPress={generarCodigo}
+                />
+            )}
+        </FigmaScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#F5F7FA' },
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
-    title: { fontSize: 22, fontWeight: 'bold', color: '#1A1A1A', marginBottom: 20 },
-    pinContainer: { backgroundColor: '#E3F2FD', padding: 30, borderRadius: 16, alignItems: 'center', width: '100%' },
-    pinText: { fontSize: 56, fontWeight: 'bold', letterSpacing: 12, color: '#1976D2', marginBottom: 10 },
-    pinExpiry: { fontSize: 14, color: '#666', textAlign: 'center' },
-    button: { backgroundColor: '#1976D2', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 12, width: '100%', alignItems: 'center' },
-    buttonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
-    backText: { color: '#666', fontSize: 16 }
+    pinCard: { alignItems: 'center', backgroundColor: FIGMA_COLORS.softPurple, marginBottom: 16 },
+    label: { color: FIGMA_COLORS.muted, fontSize: 13, fontWeight: '600', marginBottom: 8 },
+    pin: {
+        color: FIGMA_COLORS.primary,
+        fontSize: 48,
+        fontWeight: '800',
+        letterSpacing: 10,
+        marginBottom: 10,
+    },
+    note: { color: FIGMA_COLORS.muted, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+    spacer: { height: 10 },
 });

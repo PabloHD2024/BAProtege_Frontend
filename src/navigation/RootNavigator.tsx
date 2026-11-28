@@ -39,7 +39,6 @@ import AccessCodeConfirmationScreen from '../screens/AccessCodeConfirmationScree
 import ProtectedHomeScreen from '../screens/ProtectedHomeScreen';
 import ProtectionSimulatorScreen from '../screens/ProtectionSimulatorScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import CustomListScreen from '../screens/CustomListScreen';
 import DevicesScreen from '../screens/DevicesScreen';
 import ScreenGalleryScreen from '../screens/ScreenGalleryScreen';
 
@@ -91,7 +90,6 @@ export default function RootNavigator() {
                 <Stack.Screen name="ProtectedHome" component={ProtectedHomeScreen} />
                 <Stack.Screen name="ProtectionSimulator" component={ProtectionSimulatorScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
-                <Stack.Screen name="CustomList" component={CustomListScreen} />
                 <Stack.Screen name="Devices" component={DevicesScreen} />
                 {__DEV__ ? (
                     <Stack.Screen name="ScreenGallery" component={ScreenGalleryScreen} />

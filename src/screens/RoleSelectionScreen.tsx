@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Pressable, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppScreenProps } from '../navigation/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FIGMA_COLORS } from '../components';
 
 export default function RoleSelectionScreen({ navigation }: AppScreenProps<'RoleSelection'>) {
     return (
@@ -11,22 +12,22 @@ export default function RoleSelectionScreen({ navigation }: AppScreenProps<'Role
             <View style={styles.container}>
                 <Text style={styles.pageTitle}>¿Cómo vas a usar la app?</Text>
 
-                {/* BOTÓN RESPONSABLE (AZUL) */}
+                {/* BOTÓN RESPONSABLE */}
                 <Pressable 
                     style={({ pressed }) => [
                         styles.button, 
-                        { backgroundColor: '#1976D2', opacity: pressed ? 0.8 : 1 }
+                        { backgroundColor: FIGMA_COLORS.primary, opacity: pressed ? 0.8 : 1 }
                     ]}
                     onPress={() => navigation.navigate('Login')}
                 >
                     <Text style={styles.buttonText}>Soy Responsable</Text>
                 </Pressable>
 
-                {/* BOTÓN PROTEGIDO (VERDE) */}
+                {/* BOTÓN PROTEGIDO */}
                 <Pressable 
                     style={({ pressed }) => [
                         styles.button, 
-                        { backgroundColor: '#2E7D32', opacity: pressed ? 0.8 : 1 }
+                        { backgroundColor: FIGMA_COLORS.positive, opacity: pressed ? 0.8 : 1 }
                     ]}
                     onPress={async () => {
                         try {
@@ -45,9 +46,9 @@ export default function RoleSelectionScreen({ navigation }: AppScreenProps<'Role
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#F5F7FA' },
+    root: { flex: 1, backgroundColor: FIGMA_COLORS.background },
     container: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
-    pageTitle: { fontSize: 24, fontWeight: 'bold', color: '#1A1A1A', textAlign: 'center', marginBottom: 40 },
+    pageTitle: { fontSize: 24, fontWeight: 'bold', color: FIGMA_COLORS.text, textAlign: 'center', marginBottom: 40 },
     button: { borderRadius: 16, paddingVertical: 24, alignItems: 'center', marginBottom: 20 },
-    buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
+    buttonText: { color: FIGMA_COLORS.surface, fontSize: 18, fontWeight: '700' },
 });

@@ -44,7 +44,6 @@ export default function ScreenGalleryScreen({
     { title: 'ProtectedHome', description: 'Home del dispositivo protegido.', onPress: () => navigation.navigate('ProtectedHome') },
     { title: 'Interrupted', description: 'Confirmación de bloqueo aplicado.', onPress: () => navigation.navigate('Interrupted') },
     { title: 'Settings', description: 'Configuración del control parental.', onPress: () => navigation.navigate('Settings') },
-    { title: 'CustomList', description: 'Lista personalizada.', onPress: () => navigation.navigate('CustomList') },
     { title: 'Devices', description: 'Dispositivos vinculados.', onPress: () => navigation.navigate('Devices') },
   ];
 
