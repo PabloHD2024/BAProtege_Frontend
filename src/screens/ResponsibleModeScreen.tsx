@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { ListChecks, LockKeyhole, RefreshCw } from 'lucide-react-native';
 import ActionTile from '../components/ActionTile';
-import BottomTabs from '../components/BottomTabs';
+import ResponsibleTabs from '../components/ResponsibleTabs';
 import { FigmaScreen, FIGMA_COLORS } from '../components';
 import type { AppScreenProps } from '../navigation/types';
 
@@ -11,14 +11,7 @@ export default function ResponsibleModeScreen({
                                               }: AppScreenProps<'ResponsibleMode'>) {
     return (
         <FigmaScreen
-            footer={
-                <BottomTabs
-                    active="home"
-                    onHome={() => navigation.replace('ResponsibleMode')}
-                    onHistory={() => navigation.navigate('History')}
-                    onProfile={() => navigation.navigate('Profile')}
-                />
-            }
+            footer={<ResponsibleTabs active="home" navigation={navigation} />}
         >
             <Text style={styles.title}>Modo Responsable</Text>
             <ActionTile

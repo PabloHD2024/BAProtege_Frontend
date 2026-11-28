@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Bell, ChevronRight, CircleUserRound, History, LogOut, Shield, } from 'lucide-react-native';
 import { FigmaScreen, FIGMA_COLORS, PageTitle, SurfaceCard, } from '../components/FigmaScreen';
+import ResponsibleTabs from '../components/ResponsibleTabs';
 import type { AppScreenProps } from '../navigation/types';
 import { tokenStorage } from '../services/tokenStorage';
 
@@ -40,7 +41,7 @@ export default function ProfileScreen({ navigation }: AppScreenProps<'Profile'>)
   const displayEmail = loading ? '' : user?.email ?? '';
 
   return (
-    <FigmaScreen onBack={() => navigation.goBack()}>
+    <FigmaScreen footer={<ResponsibleTabs active="profile" navigation={navigation} />}>
       <PageTitle title="Mi perfil" subtitle="Gestioná tu cuenta y preferencias." />
       <SurfaceCard style={styles.profileCard}>
         <View style={styles.avatar}>
@@ -53,7 +54,7 @@ export default function ProfileScreen({ navigation }: AppScreenProps<'Profile'>)
       </SurfaceCard>
       <Text style={styles.sectionTitle}>Preferencias</Text>
       <SurfaceCard style={styles.menu}>
-        <MenuItem icon={<History color={FIGMA_COLORS.primary} size={20} />} label="Historial de actividad" onPress={() => navigation.navigate('History')} />
+        <MenuItem icon={<History color={FIGMA_COLORS.primary} size={20} />} label="Historial de actividad" onPress={() => navigation.replace('History')} />
         <MenuItem icon={<Shield color={FIGMA_COLORS.primary} size={20} />} label="Sitios bloqueados" onPress={() => navigation.navigate('BlockedSites')} />
         <MenuItem icon={<Bell color={FIGMA_COLORS.primary} size={20} />} label="Notificaciones" onPress={() => navigation.navigate('NotificationPermission')} />
       </SurfaceCard>

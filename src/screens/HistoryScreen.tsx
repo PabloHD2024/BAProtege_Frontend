@@ -10,6 +10,7 @@ import {
   type ProtectionAlert,
   type ProtectionEvent,
 } from '../services/api';
+import ResponsibleTabs from '../components/ResponsibleTabs';
 import { formatDateTime } from '../utils/format';
 import { notify } from '../utils/notify';
 import type { AppScreenProps } from '../navigation/types';
@@ -100,7 +101,7 @@ export default function HistoryScreen({ navigation }: AppScreenProps<'History'>)
   };
 
   return (
-    <FigmaScreen onBack={() => navigation.goBack()}>
+    <FigmaScreen footer={<ResponsibleTabs active="history" navigation={navigation} />}>
       <PageTitle
         title="Historial"
         subtitle="Actividad registrada por los dispositivos protegidos."
