@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '../components/Button';
 import PinEntry from '../components/PinEntry';
 import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components';
@@ -74,6 +75,20 @@ export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'Prot
         }
     };
 
+    // Salida de la pantalla de PIN (p. ej. si se entró por error siendo responsable).
+    // Hay que borrar el rol guardado: SplashScreen lo lee y, si sigue en 'protected',
+    // volvería a esta pantalla en cada inicio. Solo se ofrece mientras el dispositivo NO
+    // está vinculado, para que un dispositivo protegido no pueda salir de su modo.
+    const handleBack = async () => {
+        if (busy) return;
+        try {
+            await AsyncStorage.removeItem('@app_role');
+        } catch {
+            // Si falla el borrado igual se vuelve a la selección de rol
+        }
+        navigation.replace('RoleSelection');
+    };
+
     if (state === 'loading') {
         return (
             <FigmaScreen>
@@ -84,7 +99,7 @@ export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'Prot
 
     if (state === 'unlinked') {
         return (
-            <FigmaScreen>
+            <FigmaScreen onBack={handleBack}>
                 <PageTitle
                     title="Vincular dispositivo"
                     subtitle="Ingresá el código de 6 dígitos que generó el responsable desde su panel."
