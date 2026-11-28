@@ -28,6 +28,46 @@ export type Device = {
     creation_time?: string;
 };
 
+/** Evento tal como lo devuelve GET /events. `action` es la clasificación del backend (block, alert...). */
+export type ProtectionEvent = {
+    id: string;
+    id_device: string;
+    alias_name: string;
+    os_model?: string | null;
+    event_type: string;
+    value: string;
+    category: string | null;
+    action: string | null;
+    event_time: string;
+    es_critico: boolean;
+};
+
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+
+/** Alerta tal como la devuelve GET /events/alerts. */
+export type ProtectionAlert = {
+    id: string;
+    id_event: string;
+    event_type: string;
+    value: string;
+    device_name: string;
+    severity: AlertSeverity;
+    message: string;
+    read: boolean;
+    alert_time: string;
+};
+
+/** Respuesta de POST /events (campo `event`). */
+export type ReportedEvent = {
+    id: string;
+    event_type: string;
+    value: string;
+    category: string | null;
+    action: string | null;
+    event_time: string;
+    alert_generated: boolean;
+};
+
 export type SyncStatus = 'UP_TO_DATE' | 'RESET';
 
 /** Respuesta de GET /sync/system (versión + checksum para saber si hay que actualizar). */
@@ -262,6 +302,26 @@ export const api = {
         return Array.isArray(res?.devices) ? res.devices : [];
     },
 
+    // --- EVENTOS Y ALERTAS (responsable) ---
+    getEvents: async (deviceId?: string): Promise<ProtectionEvent[]> => {
+        const qs = deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : '';
+        const res = await fetchWithAuth(`/events${qs}`);
+        return Array.isArray(res?.events) ? res.events : [];
+    },
+
+    getAlerts: async (opts: { onlyUnread?: boolean; limit?: number } = {}): Promise<ProtectionAlert[]> => {
+        const params = new URLSearchParams();
+        if (opts.onlyUnread) params.set('soloNoLeidas', 'true');
+        if (opts.limit) params.set('limite', String(opts.limit));
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const res = await fetchWithAuth(`/events/alerts${qs}`);
+        return Array.isArray(res?.alerts) ? res.alerts : [];
+    },
+
+    markAlertRead: async (alertId: string): Promise<void> => {
+        await fetchWithAuth(`/events/alerts/${alertId}/read`, { method: 'PATCH' });
+    },
+
     // El responsable solicita la desvinculación: el dispositivo pasa a 'pending'
     requestUnlink: async (deviceId: string): Promise<void> => {
         await fetchWithAuth(`/devices/${deviceId}/unlink`, { method: 'POST' });
@@ -454,6 +514,37 @@ export const deviceApi = {
         if (result.kind === 'ok') return 'linked';
         if (result.kind === 'offline') return 'offline';
         return result.state;
+    },
+
+    /**
+     * POST /events: el protegido registra un evento. Requiere device_token y estado 'linked'.
+     * El backend normaliza el valor, lo clasifica contra las listas y decide si genera alerta.
+     */
+    reportEvent: async (event: {
+        event_type: 'domain' | 'keyword';
+        value: string;
+    }): Promise<ReportedEvent> => {
+        const token = await deviceSession.getToken();
+        if (!token) throw new Error('Este dispositivo no está vinculado.');
+        const uuid = await getOrCreateDeviceUuid();
+
+        const res = await fetch(`${API_URL}/events`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY,
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                device_uuid: uuid,
+                event_type: event.event_type,
+                value: event.value,
+                event_time: new Date().toISOString(),
+            }),
+        });
+        if (!res.ok) throw new Error(await readError(res, 'No se pudo registrar el evento'));
+        const body = await res.json();
+        return body.event;
     },
 
     /** Confirma la desvinculación. Solo funciona si el responsable la solicitó antes. */

@@ -33,6 +33,7 @@ export type RootStackParamList = {
   AccessCodeSetup: undefined;
   AccessCodeConfirmation: { accessCode: string };
   ProtectedHome: undefined;
+  ProtectionSimulator: undefined;
   Settings: undefined;
   CustomList: undefined;
   Devices: undefined;

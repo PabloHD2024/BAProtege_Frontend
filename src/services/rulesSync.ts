@@ -158,3 +158,30 @@ async function storeDevice(
     await writeJson(DEVICE_KEY, next);
     return next;
 }
+
+export type SyncAllOutcome = {
+    state: DeviceLinkState;
+    system: SystemRulesCache | null;
+    custom: DeviceRulesCache | null;
+    /** Error al actualizar la lista general (se conserva la última guardada). */
+    error: string | null;
+};
+
+/**
+ * Valida el vínculo y sincroniza la lista personalizada y la general en un solo paso.
+ * Siempre devuelve la última lista válida disponible, aunque la actualización falle.
+ */
+export async function syncAllRules(): Promise<SyncAllOutcome> {
+    const device = await syncDeviceRules();
+    let system = await getCachedSystemRules();
+    let error: string | null = null;
+
+    if (device.state === 'linked' || device.state === 'offline') {
+        try {
+            system = await syncSystemRules();
+        } catch (e: any) {
+            error = e?.message || 'No se pudo actualizar la lista general.';
+        }
+    }
+    return { state: device.state, system, custom: device.rules, error };
+}

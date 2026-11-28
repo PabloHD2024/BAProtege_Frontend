@@ -5,9 +5,7 @@ import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components
 import { deviceApi, pairingApi, type DeviceLinkState } from '../services/api';
 import {
     clearDeviceRulesCache,
-    getCachedSystemRules,
-    syncDeviceRules,
-    syncSystemRules,
+    syncAllRules,
     type DeviceRulesCache,
     type SystemRulesCache,
 } from '../services/rulesSync';
@@ -16,7 +14,7 @@ import type { AppScreenProps } from '../navigation/types';
 
 type ViewState = 'loading' | 'unlinked' | DeviceLinkState;
 
-export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) {
+export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'ProtectedHome'>) {
     const [codigo, setCodigo] = useState('');
     const [state, setState] = useState<ViewState>('loading');
     const [busy, setBusy] = useState(false);
@@ -31,18 +29,11 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
         setSyncing(true);
         setSyncError(null);
         try {
-            const outcome = await syncDeviceRules();
+            const outcome = await syncAllRules();
             setState(outcome.state);
-            setDeviceRules(outcome.rules);
-
-            if (outcome.state === 'linked' || outcome.state === 'offline') {
-                try {
-                    setSystemRules(await syncSystemRules());
-                } catch (e: any) {
-                    setSyncError(e?.message || 'No se pudo actualizar la lista general.');
-                    setSystemRules(await getCachedSystemRules());
-                }
-            }
+            setDeviceRules(outcome.custom);
+            setSystemRules(outcome.system);
+            setSyncError(outcome.error);
         } finally {
             setSyncing(false);
         }
@@ -168,11 +159,18 @@ export default function ProtectedHomeScreen(_: AppScreenProps<'ProtectedHome'>) 
                         onPress={handleConfirmUnlink}
                     />
                 ) : (
-                    <Button
-                        label={syncing ? 'Actualizando...' : 'Actualizar reglas'}
-                        disabled={syncing}
-                        onPress={refreshState}
-                    />
+                    <>
+                        <Button
+                            label={syncing ? 'Actualizando...' : 'Actualizar reglas'}
+                            disabled={syncing}
+                            onPress={refreshState}
+                        />
+                        <Button
+                            label="Simulador de protección"
+                            variant="outline"
+                            onPress={() => navigation.navigate('ProtectionSimulator')}
+                        />
+                    </>
                 )}
             </View>
         </FigmaScreen>

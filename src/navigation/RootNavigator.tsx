@@ -37,6 +37,7 @@ import BackgroundWorkScreen from '../screens/BackgroundWorkScreen';
 import AccessCodeSetupScreen from '../screens/AccessCodeSetupScreen';
 import AccessCodeConfirmationScreen from '../screens/AccessCodeConfirmationScreen';
 import ProtectedHomeScreen from '../screens/ProtectedHomeScreen';
+import ProtectionSimulatorScreen from '../screens/ProtectionSimulatorScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CustomListScreen from '../screens/CustomListScreen';
 import DevicesScreen from '../screens/DevicesScreen';
@@ -88,6 +89,7 @@ export default function RootNavigator() {
                 <Stack.Screen name="AccessCodeSetup" component={AccessCodeSetupScreen} />
                 <Stack.Screen name="AccessCodeConfirmation" component={AccessCodeConfirmationScreen} />
                 <Stack.Screen name="ProtectedHome" component={ProtectedHomeScreen} />
+                <Stack.Screen name="ProtectionSimulator" component={ProtectionSimulatorScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
                 <Stack.Screen name="CustomList" component={CustomListScreen} />
                 <Stack.Screen name="Devices" component={DevicesScreen} />
