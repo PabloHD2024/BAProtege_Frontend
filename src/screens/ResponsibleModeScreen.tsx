@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { ListChecks, LockKeyhole, RefreshCw } from 'lucide-react-native';
+import { Ban, LayoutDashboard, Link2 } from 'lucide-react-native';
 import ActionTile from '../components/ActionTile';
 import ResponsibleTabs from '../components/ResponsibleTabs';
 import { FigmaScreen, FIGMA_COLORS } from '../components';
@@ -15,7 +15,7 @@ export default function ResponsibleModeScreen({
         >
             <Text style={styles.title}>Modo Responsable</Text>
             <ActionTile
-                icon={<LockKeyhole color={FIGMA_COLORS.surface} size={22} />}
+                icon={<Ban size={20} />}
                 title="Bloquear Sitios"
                 subtitle="Bloqueá sitios incluidos en la lista de bloqueo."
                 tone="primary"
@@ -23,7 +23,7 @@ export default function ResponsibleModeScreen({
                 onPress={() => navigation.navigate('BlockedSites')}
             />
             <ActionTile
-                icon={<RefreshCw color={FIGMA_COLORS.surface} size={22} />}
+                icon={<Link2 size={20} />}
                 title="Vincular Dispositivos"
                 subtitle="Vinculá uno o más dispositivos para protegerlos."
                 tone="positive"
@@ -31,7 +31,7 @@ export default function ResponsibleModeScreen({
                 onPress={() => navigation.navigate('ConfigureAccess')}
             />
             <ActionTile
-                icon={<ListChecks color={FIGMA_COLORS.surface} size={22} />}
+                icon={<LayoutDashboard size={20} />}
                 title="Resumen de protección"
                 subtitle="Consultá tus dispositivos, reglas y listas de bloqueo."
                 tone="primary"

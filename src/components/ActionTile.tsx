@@ -23,6 +23,13 @@ export default function ActionTile({
     const bg = tone === 'positive' ? FIGMA_COLORS.positive : FIGMA_COLORS.primary;
     const isCard = variant === 'card';
 
+    // En el formato "card" el círculo es blanco: un ícono blanco no se vería, así que
+    // se pinta con el color del botón. En "mode" el círculo es translúcido y el ícono va blanco.
+    const iconNode =
+        isCard && React.isValidElement<{ color?: string }>(icon)
+            ? React.cloneElement(icon, { color: bg })
+            : icon;
+
     return (
         <TouchableOpacity
             accessibilityLabel={title}
@@ -31,7 +38,7 @@ export default function ActionTile({
             style={[styles.tile, { backgroundColor: bg }, isCard && styles.card]}
         >
             <View style={[styles.iconWrap, isCard && styles.iconWrapCard]}>
-                {icon}
+                {iconNode}
             </View>
             <View style={styles.body}>
                 <Text style={styles.title}>{title}</Text>
