@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Button from '../components/Button';
+import PinEntry from '../components/PinEntry';
 import { FigmaScreen, PageTitle, SurfaceCard, FIGMA_COLORS } from '../components';
 import { deviceApi, pairingApi, type DeviceLinkState } from '../services/api';
 import {
@@ -88,16 +89,17 @@ export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'Prot
                     title="Vincular dispositivo"
                     subtitle="Ingresá el código de 6 dígitos que generó el responsable desde su panel."
                 />
-                <TextInput
-                    style={styles.input}
-                    placeholder="000000"
-                    placeholderTextColor={FIGMA_COLORS.muted}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    value={codigo}
-                    onChangeText={t => setCodigo(t.replace(/\D/g, ''))}
-                    textAlign="center"
-                />
+                <View style={styles.pin}>
+                    <PinEntry
+                        value={codigo}
+                        onChangeText={setCodigo}
+                        accessibilityLabel="Código de vinculación de 6 dígitos"
+                        autoFocus
+                        onSubmitEditing={() => {
+                            if (codigo.length === 6 && !busy) handleVincular();
+                        }}
+                    />
+                </View>
                 <Button
                     label={busy ? 'Validando...' : 'Vincular'}
                     disabled={busy || codigo.length !== 6}
@@ -178,18 +180,7 @@ export default function ProtectedHomeScreen({ navigation }: AppScreenProps<'Prot
 }
 
 const styles = StyleSheet.create({
-    input: {
-        backgroundColor: FIGMA_COLORS.surface,
-        borderColor: FIGMA_COLORS.border,
-        borderRadius: 12,
-        borderWidth: 1,
-        color: FIGMA_COLORS.text,
-        fontSize: 24,
-        fontWeight: '700',
-        height: 60,
-        letterSpacing: 8,
-        marginBottom: 24,
-    },
+    pin: { marginBottom: 14 },
     note: { color: FIGMA_COLORS.muted, fontSize: 12, marginTop: 10 },
     warning: { color: FIGMA_COLORS.warning, fontSize: 13, marginBottom: 12 },
     cardTitle: { color: FIGMA_COLORS.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },

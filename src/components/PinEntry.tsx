@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance, } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { FIGMA_COLORS } from './FigmaScreen';
 
 type PinEntryProps = {
@@ -8,6 +8,10 @@ type PinEntryProps = {
     length?: number;
     masked?: boolean;
     accessibilityLabel: string;
+    /** Enfoca el campo al montar la pantalla (abre el teclado numérico). */
+    autoFocus?: boolean;
+    /** Se dispara con Enter / "Listo" del teclado. */
+    onSubmitEditing?: () => void;
 };
 
 export default function PinEntry({
@@ -16,16 +20,13 @@ export default function PinEntry({
                                      length = 6,
                                      masked = false,
                                      accessibilityLabel,
+                                     autoFocus = false,
+                                     onSubmitEditing,
                                  }: PinEntryProps) {
-    const inputRef = useRef<TextInputInstance | null>(null);
-
     return (
-        <Pressable
-            accessibilityLabel={`Ingresar ${accessibilityLabel}`}
-            accessibilityRole="button"
-            onPress={() => inputRef.current?.focus()}
-            style={styles.wrap}
-        >
+        // El input oculto cubre las casillas: tocarlas lo enfoca. No se usa un <button> de
+        // envoltorio porque en Firefox un campo dentro de un botón no recibe foco ni texto.
+        <View style={styles.wrap}>
             <View style={styles.row}>
                 {Array.from({ length }, (_, index) => (
                     <View key={index} style={styles.cell}>
@@ -36,17 +37,18 @@ export default function PinEntry({
                 ))}
             </View>
             <TextInput
-                ref={inputRef}
                 accessibilityLabel={accessibilityLabel}
                 autoComplete="off"
+                autoFocus={autoFocus}
                 keyboardType="number-pad"
                 maxLength={length}
                 onChangeText={text => onChangeText(text.replace(/\D/g, '').slice(0, length))}
+                onSubmitEditing={onSubmitEditing}
                 style={styles.hiddenInput}
                 textContentType="none"
                 value={value}
             />
-        </Pressable>
+        </View>
     );
 }
 
@@ -76,14 +78,14 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '700',
     },
+    // Misma altura que las casillas y alineado con ellas (row tiene marginVertical: 10)
     hiddenInput: {
-        bottom: 0,
         color: 'transparent',
         height: 52,
         left: 0,
         opacity: 0.02,
         position: 'absolute',
         right: 0,
-        top: 0,
+        top: 10,
     },
 });
